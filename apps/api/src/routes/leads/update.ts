@@ -3,7 +3,6 @@ import { authenticate } from "../../middleware/authenticate";
 import { canUpdateLead } from "@lms/auth";
 import { Role, UpdateLeadSchema } from "@lms/types";
 import { validateBody } from "../../middleware/validate";
-import { QUEUES } from "../../plugins/bullmq";
 
 export async function updateLeadRoute(fastify: FastifyInstance): Promise<void> {
   fastify.patch(
@@ -95,33 +94,6 @@ export async function updateLeadRoute(fastify: FastifyInstance): Promise<void> {
 
         return updatedLead;
       });
-
-      // Trigger Intel Brief if profile just became complete (both URLs now present)
-      if (updated.isProfileComplete) {
-        const existingBrief = await fastify.prisma.intelBrief.findUnique({
-          where: { leadId: id },
-          select: { status: true },
-        });
-        // Only queue if no complete brief exists yet
-        if (!existingBrief || existingBrief.status !== "COMPLETE") {
-          void fastify.queues[QUEUES.INTEL_BRIEF].add(
-            "generate",
-            {
-              leadId: updated.id,
-              name: updated.name,
-              instagramUrl: updated.instagramUrl,
-              websiteUrl: updated.websiteUrl,
-              industry: updated.industry,
-              dealSizeEstimate: updated.dealSizeEstimate ? Number(updated.dealSizeEstimate) : null,
-            },
-            {
-              attempts: 3,
-              backoff: { type: "exponential", delay: 30_000 },
-              jobId: `intel-brief-${id}`,
-            },
-          ).catch((err) => console.error("[intel-brief] Failed to queue:", err));
-        }
-      }
 
       return reply.status(200).send({ success: true, data: updated });
     },

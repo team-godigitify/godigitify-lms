@@ -13,7 +13,6 @@ import {
   invalidateAnalyticsCache,
   invalidateActivityCache,
 } from "../../services/cache";
-import { QUEUES } from "../../plugins/bullmq";
 
 export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
   fastify.post(
@@ -207,26 +206,6 @@ export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
 
       await invalidateAnalyticsCache(fastify.redis);
       await invalidateActivityCache(fastify.redis, branchId, userId);
-
-      // Queue Intel Brief when profile is complete (both URLs provided)
-      if (isProfileComplete) {
-        void fastify.queues[QUEUES.INTEL_BRIEF].add(
-          "generate",
-          {
-            leadId: lead.id,
-            name: lead.name,
-            instagramUrl: body.instagramUrl ?? null,
-            websiteUrl: body.websiteUrl ?? null,
-            industry: body.industry ?? null,
-            dealSizeEstimate: body.dealSizeEstimate ? Number(body.dealSizeEstimate) : null,
-          },
-          {
-            attempts: 3,
-            backoff: { type: "exponential", delay: 30_000 },
-            jobId: `intel-brief-${lead.id}`,
-          },
-        ).catch((err) => console.error("[intel-brief] Failed to queue:", err));
-      }
 
       return reply.status(201).send({ success: true, data: { lead } });
     },
