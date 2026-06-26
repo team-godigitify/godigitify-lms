@@ -187,7 +187,7 @@ export default function LoginPage() {
         <div className="w-full max-w-sm">
           {/* Mobile logo */}
           <div className="lg:hidden flex justify-center mb-8">
-            <div className="bg-primary rounded-2xl p-3">
+            <div className="bg-white rounded-2xl p-3">
               <Image
                 src="/logo.png"
                 alt="Future Education"
