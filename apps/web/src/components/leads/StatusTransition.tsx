@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ArrowRight } from "lucide-react";
+import { ChevronDown, ArrowRight, Handshake } from "lucide-react";
 import { VALID_TRANSITIONS, LeadStatus } from "@lms/types";
 import { STATUS_CONFIG } from "@/config/leadStatus";
 import { useTransitionLead } from "@/hooks/useLeadDetail";
@@ -25,9 +25,9 @@ export function StatusTransition({
   const transition = useTransitionLead(leadId);
 
   // CLIENT transition is gated by ClientDeal — excluded here, handled via ClientDealForm
-  const validNext = (VALID_TRANSITIONS[currentStatus] ?? []).filter(
-    (s) => s !== LeadStatus.CLIENT,
-  );
+  const allValidNext = VALID_TRANSITIONS[currentStatus] ?? [];
+  const clientReady = allValidNext.includes(LeadStatus.CLIENT);
+  const validNext = allValidNext.filter((s) => s !== LeadStatus.CLIENT);
 
   async function handleConfirm() {
     if (!selectedStatus) return;
@@ -49,6 +49,18 @@ export function StatusTransition({
       </div>
 
       <StatusBadge status={currentStatus} size="md" />
+
+      {canTransition && clientReady && (
+        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-purple-50 border border-purple-200">
+          <Handshake size={15} className="text-purple-500 mt-0.5 shrink-0" />
+          <div>
+            <p className="text-xs font-semibold text-purple-700">Ready to close?</p>
+            <p className="text-xs text-purple-600 mt-0.5 leading-relaxed">
+              Fill the <span className="font-semibold">Client Deal</span> form below to convert this lead to a client.
+            </p>
+          </div>
+        </div>
+      )}
 
       {canTransition && validNext.length > 0 && (
         <div className="relative">
