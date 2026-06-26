@@ -12,12 +12,14 @@ type Props = {
   leadId: string;
   currentStatus: LeadStatus;
   canTransition: boolean;
+  onOpenClientDeal?: () => void;
 };
 
 export function StatusTransition({
   leadId,
   currentStatus,
   canTransition,
+  onOpenClientDeal,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState<LeadStatus | null>(null);
@@ -51,15 +53,23 @@ export function StatusTransition({
       <StatusBadge status={currentStatus} size="md" />
 
       {canTransition && clientReady && (
-        <div className="flex items-start gap-2.5 p-3 rounded-xl bg-purple-50 border border-purple-200">
+        <button
+          type="button"
+          onClick={onOpenClientDeal}
+          className="w-full flex items-start gap-2.5 p-3 rounded-xl bg-purple-50 border border-purple-200 hover:bg-purple-100 hover:border-purple-300 transition-colors text-left group cursor-pointer"
+        >
           <Handshake size={15} className="text-purple-500 mt-0.5 shrink-0" />
           <div>
             <p className="text-xs font-semibold text-purple-700">Ready to close?</p>
             <p className="text-xs text-purple-600 mt-0.5 leading-relaxed">
-              Fill the <span className="font-semibold">Client Deal</span> form below to convert this lead to a client.
+              Fill the{" "}
+              <span className="font-semibold underline decoration-dotted group-hover:decoration-solid">
+                Client Deal
+              </span>{" "}
+              form below to convert this lead to a client.
             </p>
           </div>
-        </div>
+        </button>
       )}
 
       {canTransition && validNext.length > 0 && (

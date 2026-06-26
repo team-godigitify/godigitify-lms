@@ -229,7 +229,7 @@ export default function LeadDetailPage() {
 
           {/* Client Deal panel */}
           {showDealSection && (
-            <div className="bg-white border border-purple-200 rounded-xl overflow-hidden">
+            <div id="client-deal-section" className="bg-white border border-purple-200 rounded-xl overflow-hidden">
               <button
                 type="button"
                 onClick={() => setDealFormOpen((o) => !o)}
@@ -378,7 +378,15 @@ export default function LeadDetailPage() {
         </div>
 
         <div>
-          <LeadSidebar lead={lead} />
+          <LeadSidebar
+            lead={lead}
+            onOpenClientDeal={() => {
+              setDealFormOpen(true);
+              setTimeout(() => {
+                document.getElementById("client-deal-section")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }, 50);
+            }}
+          />
         </div>
       </div>
     </div>

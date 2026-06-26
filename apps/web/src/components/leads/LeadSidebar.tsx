@@ -160,7 +160,7 @@ function FollowUpCard({ lead }: { lead: Lead }) {
   );
 }
 
-export function LeadSidebar({ lead }: { lead: Lead }) {
+export function LeadSidebar({ lead, onOpenClientDeal }: { lead: Lead; onOpenClientDeal?: () => void }) {
   const { user } = useAuthStore();
   const [showAssignModal, setShowAssignModal] = useState(false);
 
@@ -188,6 +188,7 @@ export function LeadSidebar({ lead }: { lead: Lead }) {
           leadId={lead.id}
           currentStatus={lead.status}
           canTransition={canTransition}
+          onOpenClientDeal={onOpenClientDeal}
         />
       </div>
 
