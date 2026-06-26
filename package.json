@@ -1,5 +1,5 @@
 {
-  "name": "LMS_FutureEd",
+  "name": "godigitify-crm",
   "private": true,
   "scripts": {
     "build": "turbo run build",
