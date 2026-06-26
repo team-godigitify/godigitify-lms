@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand colors — Godigitify purple */
+  --color-primary: #47216b;
+  --color-primary-50: #f6f2fb;
+  --color-primary-100: #ede5f7;
+  --color-primary-200: #d9cbef;
+  --color-primary-300: #bba1e3;
+  --color-primary-400: #9971d4;
+  --color-primary-500: #7d4cc2;
+  --color-primary-600: #6835ad;
+  --color-primary-700: #47216b;
+  --color-primary-800: #3b1c5a;
+  --color-primary-900: #2e154a;
+  --color-primary-950: #1c0c2e;
+  --color-primary-foreground: #ffffff;
+
+  /* Surface grays */
+  --color-surface: #ffffff;
+  --color-surface-50: #f8fafc;
+  --color-surface-100: #f1f5f9;
+  --color-surface-200: #e2e8f0;
+  --color-surface-300: #cbd5e1;
+
+  /* Shadcn/ui semantic tokens */
+  --color-background: hsl(0 0% 100%);
+  --color-foreground: hsl(222.2 84% 4.9%);
+  --color-card: hsl(0 0% 100%);
+  --color-card-foreground: hsl(222.2 84% 4.9%);
+  --color-popover: hsl(0 0% 100%);
+  --color-popover-foreground: hsl(222.2 84% 4.9%);
+  --color-secondary: hsl(210 40% 96.1%);
+  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
+  --color-muted: hsl(210 40% 96.1%);
+  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
+  --color-accent: hsl(210 40% 96.1%);
+  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
+  --color-destructive: hsl(0 84.2% 60.2%);
+  --color-destructive-foreground: hsl(210 40% 98%);
+  --color-border: hsl(214.3 31.8% 91.4%);
+  --color-input: hsl(214.3 31.8% 91.4%);
+  --color-ring: hsl(277 52% 28%);
+
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-xl: 0.75rem;
+  --radius-2xl: 1rem;
+
+  /* Fonts */
+  --font-sans: "Inter", system-ui, sans-serif;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+  /* Prevent iOS Safari from auto-zooming on input focus (requires 16px minimum) */
+  input, select, textarea {
+    font-size: max(16px, 1em);
+  }
+  /* Prevent double-tap zoom on interactive elements */
+  button, a, [role="button"] {
+    touch-action: manipulation;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background-color: var(--color-surface-100); }
+::-webkit-scrollbar-thumb { background-color: var(--color-surface-300); border-radius: 9999px; }

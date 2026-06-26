@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"d:\\\\web_all\\\\LMS_FutureEd\" -Directory)",
+      "Bash(node -e \"const PDFDocument = require\\('./apps/api/node_modules/pdfkit'\\); const doc = new PDFDocument\\(\\); const chunks = []; doc.on\\('data', c => chunks.push\\(c\\)\\); doc.on\\('end', \\(\\) => { const buf = Buffer.concat\\(chunks\\); console.log\\('PDF size:', buf.length, 'First bytes:', buf.slice\\(0,4\\).toString\\(\\)\\); }\\); doc.text\\('Test'\\); doc.end\\(\\);\")",
+      "Bash(pnpm --filter api build)",
+      "Bash(pnpm --filter web build)",
+      "Bash(pnpm install *)",
+      "Bash(pnpm exec *)",
+      "Bash(git add *)",
+      "Bash(git mv *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "PowerShell(\\(Get-Item \"d:\\\\web_all\\\\LMS_FutureEd\\\\apps\\\\web\\\\public\\\\logo.png\"\\).Length)",
+      "Bash(xargs wc -l)",
+      "PowerShell(cd \"d:\\\\web_all\\\\LMS_FutureEd\\\\packages\\\\db\"; $env:DATABASE_URL=\"postgresql://postgres.maduztjwogyyyskqxfdu:PgB8HMcbyqn@aws-1-ap-south-1.pooler.supabase.com:5432/postgres\"; pnpm prisma migrate dev --name \"add_confirmed_app_ids_and_father_name\")",
+      "PowerShell(cd \"d:\\\\web_all\\\\LMS_FutureEd\\\\packages\\\\db\"; $env:DATABASE_URL=\"postgresql://postgres.maduztjwogyyyskqxfdu:PgB8HMcbyqn@aws-1-ap-south-1.pooler.supabase.com:5432/postgres\"; $env:PRISMA_MIGRATE_SKIP_GENERATE=\"true\"; pnpm prisma migrate dev --name \"add_confirmed_app_ids_and_father_name\" 2>&1)",
+      "PowerShell(cd \"d:\\\\web_all\\\\LMS_FutureEd\\\\packages\\\\db\"; $env:DATABASE_URL=\"postgresql://postgres.maduztjwogyyyskqxfdu:PgB8HMcbyqn@aws-1-ap-south-1.pooler.supabase.com:5432/postgres\"; echo \"y\" | pnpm prisma migrate dev --name \"add_confirmed_app_ids_and_father_name\")",
+      "PowerShell(cd \"d:\\\\web_all\\\\LMS_FutureEd\\\\packages\\\\db\"; $env:DATABASE_URL=\"postgresql://postgres.maduztjwogyyyskqxfdu:PgB8HMcbyqn@aws-1-ap-south-1.pooler.supabase.com:5432/postgres\"; pnpm prisma migrate deploy)",
+      "PowerShell(cd \"d:\\\\web_all\\\\LMS_FutureEd\\\\packages\\\\db\"; $env:DATABASE_URL=\"postgresql://postgres.maduztjwogyyyskqxfdu:PgB8HMcbyqn@aws-1-ap-south-1.pooler.supabase.com:5432/postgres\"; pnpm prisma generate)",
+      "Bash(mkdir -p \"d:/web_all/LMS_FutureEd/apps/web/src/app/\\(dashboard\\)/leads/[id]/edit\")",
+      "Bash(curl -s http://localhost:5000/api/v1/health)",
+      "Bash(curl -s -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjbXFyenM5dGkwMDAwaDRmODFrYnE3Nms3IiwiZW1haWwiOiJhZG1pbkBnb2RpZ2l0aWZ5LmNvbSIsInJvbGUiOiJBRE1JTiIsImJyYW5jaElkIjoiYnJhbmNoLWJhbnVyIiwianRpIjoiNjgyMTY2MGQtMGFjOC00NGM5LWI4MjEtMTI0YTRmYzk2MTdlIiwiaWF0IjoxNzgyNDY4OTk0LCJleHAiOjE3ODI0Njk4OTR9.hzkFseaG7t16MC4g1RXlOSC48HT17ejAosgiAkeODkI' http://localhost:5000/api/v1/analytics/employees?period=last30)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:3000/analytics/employees/cmqrzsam20002h4f882pkuzdg\")",
+      "PowerShell(cd \"d:\\\\web_all\\\\godigitify-lms\\\\apps\\\\web\" ; npx tsc --noEmit 2>&1 | Where-Object { $_ -match \"error TS\" } | Select-Object -First 10)"
+    ],
+    "additionalDirectories": [
+      "d:\\web_all\\LMS_FutureEd\\apps\\web\\src\\app\\(dashboard)\\leads\\[id]"
+    ]
+  }
+}

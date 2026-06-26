@@ -1,0 +1,426 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum Role {
+  EMPLOYEE
+  SUB_ADMIN
+  ADMIN
+}
+
+enum LeadStatus {
+  NEW
+  ATTEMPTED_CONTACT
+  CONNECTED
+  INTERESTED
+  FOLLOW_UP_SCHEDULED
+  NEGOTIATING
+  PROPOSAL_SENT
+  CLIENT
+  LOST
+  NOT_INTERESTED
+  NOT_REACHABLE
+  DUPLICATE
+}
+
+enum LeadPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum IntelBriefStatus {
+  PENDING
+  COMPLETE
+  NEEDS_REVIEW
+  FAILED
+}
+
+enum InteractionType {
+  NOTE
+  CALL
+  EMAIL
+  SMS
+  MEETING
+  DOCUMENT_UPLOADED
+  STATUS_CHANGED
+}
+
+// ─────────────────────────────────────────
+// BRANCH
+// Physical office location.
+// Currently: Banur, Punjab. Multi-branch ready.
+// ─────────────────────────────────────────
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  city      String
+  address   String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+  leads Lead[]
+}
+
+// ─────────────────────────────────────────
+// USER
+// All roles live in one table.
+// Password always stored as bcrypt hash.
+// ─────────────────────────────────────────
+
+model User {
+  id           String  @id @default(cuid())
+  name         String
+  email        String  @unique
+  phone        String?
+  passwordHash String
+  role         Role    @default(EMPLOYEE)
+  isActive     Boolean @default(true)
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedLeads    Lead[]              @relation("AssignedTo")
+  createdLeads     Lead[]              @relation("CreatedBy")
+  interactions     InteractionLog[]
+  interactionEdits InteractionLogEdit[]
+  assignmentsMade  AssignmentHistory[] @relation("AssignedBy")
+  auditLogs        AuditLog[]
+  clientDeals      ClientDeal[]
+
+  @@index([email])
+  @@index([branchId])
+  @@index([role])
+  @@index([isActive])
+}
+
+// ─────────────────────────────────────────
+// LEAD SOURCE TYPE
+// Dynamic — admin manages.
+// Pre-seeded: Manual Entry, CSV Import, Meta Lead Ads, etc.
+// ─────────────────────────────────────────
+
+model LeadSourceType {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  leads Lead[]
+}
+
+// ─────────────────────────────────────────
+// LEAD
+// Core entity. Minimum at creation: phone.
+// instagramUrl + websiteUrl: mandatory in UI for manual creation,
+// nullable at DB level to allow Meta leads to land incomplete.
+// isProfileComplete = false when either URL is missing (triggers
+// employee badge and defers Intel Brief until both are present).
+// ─────────────────────────────────────────
+
+model Lead {
+  id String @id @default(cuid())
+
+  // Identity — name optional for Godigitify (prospects may be businesses)
+  name  String?
+  phone String
+
+  // Digital presence — mandatory in manual creation UI, nullable for Meta leads
+  instagramUrl String?
+  websiteUrl   String?
+
+  // false when instagramUrl or websiteUrl missing; flips to true on employee fill
+  isProfileComplete Boolean @default(true)
+
+  // Optional contact + business metadata
+  email            String?
+  industry         String?
+  city             String?
+  leadPriority     LeadPriority @default(MEDIUM)
+  dealSizeEstimate Decimal?
+
+  // Source
+  sourceId    String?
+  source      LeadSourceType? @relation(fields: [sourceId], references: [id])
+  sourceOther String?
+
+  // Pipeline
+  status  LeadStatus @default(NEW)
+  remarks String?
+
+  // Follow-up
+  nextFollowUpAt DateTime?
+
+  // Ownership
+  branchId     String
+  branch       Branch @relation(fields: [branchId], references: [id])
+  assignedToId String?
+  assignedTo   User?  @relation("AssignedTo", fields: [assignedToId], references: [id])
+  createdById  String
+  createdBy    User   @relation("CreatedBy", fields: [createdById], references: [id])
+
+  // Duplicate handling — self-referential
+  isDuplicate   Boolean @default(false)
+  duplicateOfId String?
+  duplicateOf   Lead?   @relation("Duplicates", fields: [duplicateOfId], references: [id])
+  duplicates    Lead[]  @relation("Duplicates")
+
+  // Closing tracking
+  confirmedAt   DateTime?
+  confirmedById String?
+
+  // Meta Lead Form (Instant Form)
+  metaLeadgenId  String? @unique
+  metaAdName     String?
+  metaRawPayload Json?
+
+  // WhatsApp Cloud API
+  waContactId    String?
+  waFirstMessage String?
+  waMessageType  String?
+  isFromWhatsApp Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  interactions InteractionLog[]
+  assignments  AssignmentHistory[]
+  auditLogs    AuditLog[]
+  intelBrief   IntelBrief?
+  clientDeal   ClientDeal?
+
+  @@index([phone])
+  @@index([email])
+  @@index([instagramUrl])
+  @@index([websiteUrl])
+  @@index([status])
+  @@index([assignedToId])
+  @@index([branchId])
+  @@index([createdAt])
+  @@index([sourceId])
+  @@index([isDuplicate])
+  @@index([nextFollowUpAt])
+  @@index([isProfileComplete])
+  @@index([leadPriority])
+  @@index([waContactId])
+  @@index([isFromWhatsApp])
+}
+
+// ─────────────────────────────────────────
+// CLIENT DEAL
+// Created when a lead is ready to close.
+// Gates the CLIENT transition — form must be submitted first.
+// Replaces ConfirmedApplication.
+// No PDF generated here — quotationLink is an external document URL.
+// ─────────────────────────────────────────
+
+model ClientDeal {
+  id                String   @id @default(cuid())
+  leadId            String   @unique
+  lead              Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  dealValue         Decimal
+  servicesSold      String[]
+  contractStartDate DateTime
+  quotationLink     String
+  closedById        String
+  closedBy          User     @relation(fields: [closedById], references: [id])
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([leadId])
+  @@index([closedById])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────
+// INTEL BRIEF
+// AI-generated prospect intelligence via Claude API.
+// Each generation is a single-turn stateless API call —
+// no conversation history accumulated between runs.
+// Auto-created on lead creation when isProfileComplete = true.
+// Deferred until isProfileComplete flips to true for Meta leads.
+// ─────────────────────────────────────────
+
+model IntelBrief {
+  id               String           @id @default(cuid())
+  leadId           String           @unique
+  lead             Lead             @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  rawInput         Json
+  aiOutput         Json
+  validatedOutput  Json?
+  status           IntelBriefStatus @default(PENDING)
+  aiModelUsed      String
+  retryCount       Int              @default(0)
+  manualOverrideBy String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@index([leadId])
+  @@index([status])
+}
+
+// ─────────────────────────────────────────
+// INTERACTION LOG
+// The activity feed. ONE ROW = ONE ACTION.
+// Rows are NEVER hard-deleted.
+// ─────────────────────────────────────────
+
+model InteractionLog {
+  id     String          @id @default(cuid())
+  leadId String
+  lead   Lead            @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  userId String
+  user   User            @relation(fields: [userId], references: [id])
+  type   InteractionType
+
+  note String?
+
+  callRecordingUrl String?
+  callDurationSecs Int?
+  callDirection    String?
+
+  statusBefore LeadStatus?
+  statusAfter  LeadStatus?
+
+  smsSent   Boolean @default(false)
+  emailSent Boolean @default(false)
+
+  isEdited Boolean @default(false)
+
+  isDeleted   Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedById String?
+
+  createdAt DateTime @default(now())
+
+  editHistory InteractionLogEdit[]
+
+  @@index([leadId])
+  @@index([userId])
+  @@index([createdAt])
+  @@index([type])
+  @@index([statusAfter])
+  @@index([isDeleted])
+}
+
+// ─────────────────────────────────────────
+// INTERACTION LOG EDIT
+// Full version history — nothing ever lost.
+// ─────────────────────────────────────────
+
+model InteractionLogEdit {
+  id               String         @id @default(cuid())
+  interactionLogId String
+  interactionLog   InteractionLog @relation(fields: [interactionLogId], references: [id], onDelete: Cascade)
+
+  editedById String
+  editedBy   User   @relation(fields: [editedById], references: [id])
+
+  noteBefore String
+  noteAfter  String
+
+  editedAt DateTime @default(now())
+
+  @@index([interactionLogId])
+  @@index([editedAt])
+}
+
+// ─────────────────────────────────────────
+// ASSIGNMENT HISTORY
+// Every reassignment permanently logged.
+// ─────────────────────────────────────────
+
+model AssignmentHistory {
+  id           String   @id @default(cuid())
+  leadId       String
+  lead         Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
+  assignedById String
+  assignedBy   User     @relation("AssignedBy", fields: [assignedById], references: [id])
+  assignedToId String?
+  reason       String?
+  createdAt    DateTime @default(now())
+
+  @@index([leadId])
+  @@index([assignedById])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────
+// AUDIT LOG
+// System-generated. Never user-written.
+// ─────────────────────────────────────────
+
+model AuditLog {
+  id     String  @id @default(cuid())
+  leadId String?
+  lead   Lead?   @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  userId String
+  user   User    @relation(fields: [userId], references: [id])
+
+  action   String
+  oldValue Json?
+  newValue Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([leadId])
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────
+// REFRESH TOKEN
+// One row per active device session. Max 3 per user.
+// Raw token NEVER stored — only bcrypt hash.
+// ─────────────────────────────────────────
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  deviceInfo String?
+  lastUsedAt DateTime @default(now())
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ─────────────────────────────────────────
+// PASSWORD RESET TOKEN
+// One-time use. Expires in 1 hour.
+// ─────────────────────────────────────────
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+}
