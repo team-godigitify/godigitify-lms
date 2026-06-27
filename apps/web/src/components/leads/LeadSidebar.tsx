@@ -188,7 +188,7 @@ export function LeadSidebar({ lead, onOpenClientDeal }: { lead: Lead; onOpenClie
           leadId={lead.id}
           currentStatus={lead.status}
           canTransition={canTransition}
-          onOpenClientDeal={onOpenClientDeal}
+          {...(onOpenClientDeal ? { onOpenClientDeal } : {})}
         />
       </div>
 
