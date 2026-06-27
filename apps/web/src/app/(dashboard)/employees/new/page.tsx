@@ -20,6 +20,7 @@ export default function NewUserPage() {
     name: "",
     email: "",
     phone: "",
+    password: "",
     role: "EMPLOYEE",
     branchId: "",
     sendSetupLink: true,
@@ -36,6 +37,10 @@ export default function NewUserPage() {
     if (!form.name.trim()) errs["name"] = "Name is required";
     if (!form.email.trim()) errs["email"] = "Email is required";
     if (!selectedBranchId) errs["branchId"] = "Branch is required";
+    if (!form.sendSetupLink) {
+      if (!form.password) errs["password"] = "Password is required";
+      else if (form.password.length < 8) errs["password"] = "Password must be at least 8 characters";
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -43,15 +48,19 @@ export default function NewUserPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!validate()) return;
-    const result = await createUser.mutateAsync({
+    const payload: Record<string, unknown> = {
       name: form.name,
       email: form.email,
       phone: form.phone || undefined,
       role: form.role,
       branchId: selectedBranchId,
       sendSetupLink: form.sendSetupLink,
-    });
-    if (result) router.push("/users");
+    };
+    if (!form.sendSetupLink && form.password) {
+      payload["password"] = form.password;
+    }
+    const result = await createUser.mutateAsync(payload);
+    if (result) router.push("/employees");
   }
 
   const availableRoles =
@@ -90,7 +99,7 @@ export default function NewUserPage() {
           label="Work Email"
           type="email"
           required
-          placeholder="employee@futureeducation.in"
+          placeholder="employee@godigitify.com"
           value={form.email}
           onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
           error={errors["email"]}
@@ -159,7 +168,7 @@ export default function NewUserPage() {
             type="checkbox"
             checked={form.sendSetupLink}
             onChange={(e) =>
-              setForm((p) => ({ ...p, sendSetupLink: e.target.checked }))
+              setForm((p) => ({ ...p, sendSetupLink: e.target.checked, password: "" }))
             }
             className="accent-primary w-4 h-4"
           />
@@ -172,6 +181,19 @@ export default function NewUserPage() {
             </p>
           </div>
         </label>
+
+        {!form.sendSetupLink && (
+          <Input
+            label="Password"
+            type="password"
+            required
+            placeholder="Minimum 8 characters"
+            value={form.password}
+            onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
+            error={errors["password"]}
+            helperText={!errors["password"] ? "You are setting the password manually — share it securely with the employee" : undefined}
+          />
+        )}
 
         <div className="flex gap-3 pt-2">
           <Button

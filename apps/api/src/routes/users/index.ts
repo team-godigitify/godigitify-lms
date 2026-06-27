@@ -158,6 +158,7 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
         role: body.role,
         branchId: body.branchId,
         sendSetupLink: body.sendSetupLink ?? true,
+        password: body.password ?? undefined,
         createdById: userId,
         prisma: fastify.prisma,
         fastify,

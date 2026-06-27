@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { validEmail, indianPhone, strongPassword } from './common'
+import { validEmail, indianPhone } from './common'
 import { Role } from '../enums'
 
 export const CreateUserSchema = z.object({
@@ -9,6 +9,7 @@ export const CreateUserSchema = z.object({
   role:     z.nativeEnum(Role),
   branchId: z.string().min(1, { message: 'Branch is required' }),
   sendSetupLink: z.boolean().default(true),
+  password: z.string().min(8, { message: 'Password must be at least 8 characters' }).optional(),
 })
 
 export const UpdateUserSchema = z.object({
@@ -19,7 +20,7 @@ export const UpdateUserSchema = z.object({
 })
 
 export const AdminResetPasswordSchema = z.object({
-  newPassword: strongPassword,
+  newPassword: z.string().min(8, { message: 'Password must be at least 8 characters' }),
 })
 
 export type CreateUserInput = z.infer<typeof CreateUserSchema>

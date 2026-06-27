@@ -582,6 +582,8 @@ export default function EmployeesPage() {
             placeholder="Minimum 8 characters"
             value={newPassword}
             onChange={(e) => setNewPassword(e.target.value)}
+            error={newPassword.length > 0 && newPassword.length < 8 ? "Password must be at least 8 characters" : undefined}
+            helperText={newPassword.length === 0 || newPassword.length >= 8 ? "At least 8 characters" : undefined}
           />
         </div>
       </Modal>

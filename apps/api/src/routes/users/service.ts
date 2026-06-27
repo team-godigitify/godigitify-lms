@@ -37,6 +37,7 @@ export async function createUser(params: {
   role: string
   branchId: string
   sendSetupLink: boolean
+  password?: string
   createdById: string
   prisma: PrismaClient
   fastify: FastifyInstance
@@ -49,9 +50,9 @@ export async function createUser(params: {
 
   if (existing) return { error: 'EMAIL_EXISTS' }
 
-  // Temporary password — user will change via setup link
-  const tempPassword = generateTempPassword()
-  const passwordHash = await bcrypt.hash(tempPassword, BCRYPT_ROUNDS)
+  // Use admin-provided password when sendSetupLink is false, otherwise generate temp
+  const rawPassword = (!params.sendSetupLink && params.password) ? params.password : generateTempPassword()
+  const passwordHash = await bcrypt.hash(rawPassword, BCRYPT_ROUNDS)
 
   const user = await prisma.user.create({
     data: {
