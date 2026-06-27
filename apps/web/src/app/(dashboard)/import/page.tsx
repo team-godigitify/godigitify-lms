@@ -24,6 +24,7 @@ type ParsedRow = {
   rowIndex: number;
   phone: string;
   name: string | null;
+  altPhone: string | null;
   email: string | null;
   instagramUrl: string | null;
   websiteUrl: string | null;
@@ -58,6 +59,19 @@ const COLUMN_MAP: Record<string, string> = {
   telmob: "phone",
   contact: "phone",
   "contact no": "phone",
+
+  // Alt Phone
+  "alt phone": "altPhone",
+  "alt no": "altPhone",
+  "alt number": "altPhone",
+  "alternate phone": "altPhone",
+  "alternate number": "altPhone",
+  "alternate mobile": "altPhone",
+  "mobile 2": "altPhone",
+  "phone 2": "altPhone",
+  "secondary phone": "altPhone",
+  "secondary mobile": "altPhone",
+  altphone: "altPhone",
 
   // Name
   name: "name",
@@ -158,6 +172,7 @@ function parseExcelFile(file: File): Promise<ParsedRow[]> {
 
           parsed["phone"] = phone;
           if (!parsed["name"]) parsed["name"] = null;
+          if (!parsed["altPhone"]) parsed["altPhone"] = null;
           if (!parsed["email"]) parsed["email"] = null;
           if (!parsed["instagramUrl"]) parsed["instagramUrl"] = null;
           if (!parsed["websiteUrl"]) parsed["websiteUrl"] = null;
@@ -234,8 +249,8 @@ export default function ImportPage() {
 
   const templateHref = useMemo(() => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ["phone", "name", "email", "instagram url", "website url", "industry", "city", "source", "remarks"],
-      ["9876543210", "Amit Sharma", "amit@business.com", "https://instagram.com/amitbiz", "https://amitbiz.com", "E-commerce", "Chandigarh", "Facebook", "Interested in Meta Ads"],
+      ["phone", "alt phone", "name", "email", "instagram url", "website url", "industry", "city", "source", "remarks"],
+      ["9876543210", "", "Amit Sharma", "amit@business.com", "https://instagram.com/amitbiz", "https://amitbiz.com", "E-commerce", "Chandigarh", "Facebook", "Interested in Meta Ads"],
     ]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Leads");
@@ -357,7 +372,7 @@ export default function ImportPage() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-surface-100 bg-surface-50">
-                      {["#", "Phone", "Name", "Email", "Instagram", "Website", "Industry", "City", "Source", "Remarks", "Status"].map((h) => (
+                      {["#", "Phone", "Alt Phone", "Name", "Email", "Instagram", "Website", "Industry", "City", "Source", "Remarks", "Status"].map((h) => (
                         <th key={h} className="px-3 py-2 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide whitespace-nowrap">
                           {h}
                         </th>
@@ -369,6 +384,7 @@ export default function ImportPage() {
                       <tr key={row.rowIndex} className="hover:bg-surface-50">
                         <td className="px-3 py-2 text-xs text-gray-400">{row.rowIndex}</td>
                         <td className="px-3 py-2 text-sm font-medium text-gray-800 whitespace-nowrap">{row.phone}</td>
+                        <td className="px-3 py-2 text-sm text-gray-600 whitespace-nowrap">{row.altPhone ?? "—"}</td>
                         <td className="px-3 py-2 text-sm text-gray-600 whitespace-nowrap">{row.name ?? "—"}</td>
                         <td className="px-3 py-2 text-xs text-gray-500">{row.email ?? "—"}</td>
                         <td className="px-3 py-2 text-xs text-gray-500 max-w-30 truncate" title={row.instagramUrl ?? ""}>{row.instagramUrl ?? "—"}</td>
