@@ -12,6 +12,7 @@ export type ExcelRow = {
   // Godigitify field set
   name?: string;
   phone?: string;
+  altPhone?: string;
   instagramUrl?: string;
   websiteUrl?: string;
   email?: string;
@@ -71,6 +72,7 @@ export function processImportRows(
       rowIndex: row.rowIndex,
       name: row.name?.trim() ?? null,
       phone: row.phone.trim(),
+      altPhone: row.altPhone?.trim() ?? null,
       instagramUrl: row.instagramUrl?.trim() ?? null,
       websiteUrl: row.websiteUrl?.trim() ?? null,
       email: row.email?.trim() ?? null,

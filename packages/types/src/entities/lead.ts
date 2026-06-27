@@ -9,6 +9,7 @@ export type Lead = {
   id: string;
   name: string | null;
   phone: string;
+  altPhone: string | null;
   instagramUrl: string | null;
   websiteUrl: string | null;
   isProfileComplete: boolean;
@@ -48,6 +49,7 @@ export type LeadSummary = {
   id: string;
   name: string | null;
   phone: string;
+  altPhone: string | null;
   instagramUrl: string | null;
   isProfileComplete: boolean;
   email: string | null;

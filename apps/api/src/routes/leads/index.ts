@@ -161,6 +161,7 @@ export async function leadRoutes(fastify: FastifyInstance): Promise<void> {
           rowIndex: number;
           name?: string | null;
           phone: string;
+          altPhone?: string | null;
           email?: string | null;
           instagramUrl?: string | null;
           websiteUrl?: string | null;
@@ -253,6 +254,7 @@ export async function leadRoutes(fastify: FastifyInstance): Promise<void> {
             data: {
               name: row.name ?? null,
               phone,
+              altPhone: row.altPhone ?? null,
               email: row.email?.toLowerCase().trim() ?? null,
               instagramUrl: row.instagramUrl ?? null,
               websiteUrl: row.websiteUrl ?? null,

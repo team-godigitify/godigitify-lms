@@ -50,6 +50,7 @@ export type ProcessedLeadRow = {
   rowIndex: number
   name: string | null
   phone: string
+  altPhone: string | null
   instagramUrl: string | null
   websiteUrl: string | null
   email: string | null

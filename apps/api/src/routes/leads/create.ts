@@ -163,6 +163,7 @@ export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
           data: {
             name: body.name ?? null,
             phone: body.phone,
+            altPhone: body.altPhone ?? null,
             email: body.email?.toLowerCase().trim() ?? null,
             instagramUrl: body.instagramUrl ?? null,
             websiteUrl: body.websiteUrl ?? null,

@@ -36,6 +36,7 @@ export default function EditLeadPage() {
 
   const [form, setForm] = useState({
     phone: "",
+    altPhone: "",
     name: "",
     email: "",
     instagramUrl: "",
@@ -63,6 +64,7 @@ export default function EditLeadPage() {
     if (!lead) return;
     setForm({
       phone: lead.phone ?? "",
+      altPhone: (lead as any).altPhone ?? "",
       name: (lead as any).name ?? "",
       email: lead.email ?? "",
       instagramUrl: (lead as any).instagramUrl ?? "",
@@ -93,6 +95,8 @@ export default function EditLeadPage() {
     const errs: Record<string, string> = {};
     if (!form.phone.match(/^[6-9]\d{9}$/))
       errs["phone"] = "Enter valid 10-digit Indian number";
+    if (form.altPhone && !/^[6-9]\d{9}$/.test(form.altPhone))
+      errs["altPhone"] = "Enter valid 10-digit Indian mobile number";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -103,6 +107,7 @@ export default function EditLeadPage() {
 
     const payload: Record<string, unknown> = { phone: form.phone };
     if (form.name) payload["name"] = form.name;
+    if (form.altPhone) payload["altPhone"] = form.altPhone;
     if (form.email) payload["email"] = form.email;
     if (form.instagramUrl) payload["instagramUrl"] = form.instagramUrl;
     if (form.websiteUrl) payload["websiteUrl"] = form.websiteUrl;
@@ -178,6 +183,15 @@ export default function EditLeadPage() {
             placeholder="Business owner / contact person"
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
+          />
+          <Input
+            label="Alt Number"
+            type="tel"
+            placeholder="e.g. 9876543210"
+            value={form.altPhone}
+            onChange={(e) => set("altPhone", e.target.value.replace(/\D/g, ""))}
+            maxLength={10}
+            inputMode="numeric"
           />
           <Input
             label="Email"

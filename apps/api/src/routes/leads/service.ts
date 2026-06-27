@@ -14,6 +14,7 @@ export const leadSummarySelect = {
   id: true,
   name: true,
   phone: true,
+  altPhone: true,
   email: true,
   status: true,
   city: true,

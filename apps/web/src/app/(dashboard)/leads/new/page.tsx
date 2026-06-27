@@ -45,6 +45,7 @@ export default function NewLeadPage() {
 
   const [form, setForm] = useState({
     phone: "",
+    altPhone: "",
     name: "",
     email: "",
     instagramUrl: "",
@@ -115,6 +116,8 @@ export default function NewLeadPage() {
     const errs: Record<string, string> = {};
     if (!form.phone.match(/^[6-9]\d{9}$/))
       errs["phone"] = "Enter valid 10-digit Indian mobile number (starts with 6–9)";
+    if (form.altPhone && !/^[6-9]\d{9}$/.test(form.altPhone))
+      errs["altPhone"] = "Enter valid 10-digit Indian mobile number";
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       errs["email"] = "Enter a valid email address";
     if (form.nextFollowUpAt && new Date(form.nextFollowUpAt) <= new Date())
@@ -135,6 +138,7 @@ export default function NewLeadPage() {
         isProfileComplete,
       };
       if (form.name) payload["name"] = form.name;
+      if (form.altPhone) payload["altPhone"] = form.altPhone;
       if (form.email) payload["email"] = form.email;
       if (form.instagramUrl) payload["instagramUrl"] = form.instagramUrl;
       if (form.websiteUrl) payload["websiteUrl"] = form.websiteUrl;
@@ -263,6 +267,17 @@ export default function NewLeadPage() {
                 placeholder="Business owner / contact person"
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
+              />
+              <Input
+                label="Alt Number"
+                type="tel"
+                placeholder="e.g. 9876543210"
+                value={form.altPhone}
+                onChange={(e) => set("altPhone", e.target.value.replace(/\D/g, ""))}
+                error={errors["altPhone"]}
+                helperText={!errors["altPhone"] ? "Alternative 10-digit number (optional)" : undefined}
+                maxLength={10}
+                inputMode="numeric"
               />
               <Input
                 label="Email"

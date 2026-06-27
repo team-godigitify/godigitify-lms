@@ -41,6 +41,7 @@ export const CreateLeadSchema = z.object({
 
   // Required contact
   phone: indianPhone,
+  altPhone: indianPhone.optional(),
 
   // Digital presence — optional at API level (Meta leads may arrive without)
   instagramUrl: instagramUrl.optional(),
@@ -78,6 +79,7 @@ export const UpdateLeadSchema = z.object({
     .min(1, "Name cannot be empty if provided")
     .max(200)
     .optional(),
+  altPhone: indianPhone.optional(),
   instagramUrl: instagramUrl.optional(),
   websiteUrl: websiteUrl.optional(),
   email: optionalEmail,

@@ -53,29 +53,6 @@ async function main() {
     },
   });
 
-  const employees = [
-    { name: "Employee",   email: "employee@godigitify.com",  password: "Emp1@Godigitify123" },
-    { name: "Employee 2", email: "employee2@godigitify.com", password: "Emp2@Godigitify123" },
-    { name: "Employee 3", email: "employee3@godigitify.com", password: "Emp3@Godigitify123" },
-    { name: "Employee 4", email: "employee4@godigitify.com", password: "Emp4@Godigitify123" },
-    { name: "Employee 5", email: "employee5@godigitify.com", password: "Emp5@Godigitify123" },
-  ];
-
-  for (const emp of employees) {
-    const hash = await bcrypt.hash(emp.password, 12);
-    await prisma.user.upsert({
-      where: { email: emp.email },
-      update: { passwordHash: hash },
-      create: {
-        name: emp.name,
-        email: emp.email,
-        passwordHash: hash,
-        role: "EMPLOYEE",
-        branchId: branch.id,
-      },
-    });
-  }
-
   // 3. Seed lead source types (digital agency sources)
   const sources = [
     "Manual Entry",
