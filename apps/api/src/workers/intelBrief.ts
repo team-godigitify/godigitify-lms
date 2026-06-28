@@ -76,7 +76,8 @@ export function startIntelBriefWorker(connection: Redis, prisma: PrismaClient): 
     },
     {
       connection,
-      concurrency: 3,
+      // Keep this serial to avoid multiple expensive AI runs piling up at once.
+      concurrency: 1,
       // Exponential backoff: 30s, 2min, 8min
       limiter: { max: 10, duration: 60_000 },
     },

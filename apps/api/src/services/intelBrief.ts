@@ -2,7 +2,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { config } from "../config";
 import type { IntelBriefValidatedOutput } from "@lms/types";
 
-const MODEL = "claude-sonnet-4-6";
+const MODEL = "claude-haiku-4-5-20251001";
 const MAX_TOOL_ITERATIONS = 8;
 const FETCH_TIMEOUT_MS = 15_000;
 const MAX_CONTENT_CHARS = 40_000;
