@@ -18,6 +18,14 @@ export type {
   IntelBriefItem,
   IntelBriefGap,
   IntelBriefValidatedOutput,
+  ProspectSnapshot,
+  IceBreaker,
+  NegotiationAngle,
+  LoopInHook,
+  BrandPositioning,
+  BrandVisibility,
+  BrandFoundationGap,
+  BrandAudit,
 } from "./entities/confirmed";
 
 // API contracts
