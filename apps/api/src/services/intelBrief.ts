@@ -23,6 +23,21 @@ const RELEVANT_META_PROPS = new Set([
 
 type FetchResult = { text: string; metaFound: boolean };
 
+type InstagramCounts = { followers: number; following: number; posts: number };
+
+// Instagram's og:description follows a fixed "X Followers, Y Following, Z Posts"
+// format. Parsing it directly in code sidesteps the model's tendency to
+// transcribe some numbers correctly and hallucinate others (see instagramCounts
+// usage below) — these three fields never need an LLM in the loop.
+const INSTAGRAM_COUNTS_RE = /([\d,]+)\s*Followers?,\s*([\d,]+)\s*Following,\s*([\d,]+)\s*Posts?/i;
+
+function parseInstagramCounts(text: string): InstagramCounts | null {
+  const match = text.match(INSTAGRAM_COUNTS_RE);
+  if (!match) return null;
+  const toInt = (s: string) => parseInt(s.replace(/,/g, ""), 10);
+  return { followers: toInt(match[1]!), following: toInt(match[2]!), posts: toInt(match[3]!) };
+}
+
 async function fetchUrlContent(url: string): Promise<FetchResult> {
   try {
     const controller = new AbortController();
@@ -343,9 +358,11 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
   // happens fetchUrlContent finds no og:/twitter: meta tags, but the model isn't
   // reliably trustworthy about admitting it — it tends to fill in plausible-looking
   // follower/following/post counts instead of nulls, even though the prompt tells it
-  // not to guess. Track ground truth here in code and overwrite the model's numbers
-  // below if no real meta tag was ever found for the Instagram URL.
+  // not to guess (and even when meta IS found, it can still transcribe individual
+  // numbers wrong, e.g. reporting a nonzero "following" for an account that has none).
+  // Track ground truth here in code and overwrite the model's numbers below.
   let instagramMetaFound = false;
+  let instagramCounts: InstagramCounts | null = null;
 
   for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
     const response = await anthropic.messages.create({
@@ -398,7 +415,11 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
         throw new Error("AI output missing required fields");
       }
 
-      if (!instagramMetaFound) {
+      if (instagramCounts) {
+        parsed.prospect_snapshot.instagram_followers = instagramCounts.followers;
+        parsed.prospect_snapshot.instagram_following = instagramCounts.following;
+        parsed.prospect_snapshot.instagram_posts = instagramCounts.posts;
+      } else if (!instagramMetaFound) {
         parsed.prospect_snapshot.instagram_followers = null;
         parsed.prospect_snapshot.instagram_following = null;
         parsed.prospect_snapshot.instagram_posts = null;
@@ -417,8 +438,9 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
       const { url } = block.input as { url: string };
       console.log(`[INTEL BRIEF] Fetching: ${url}`);
       const { text, metaFound } = await fetchUrlContent(url);
-      if (metaFound && url.toLowerCase().includes("instagram.com")) {
-        instagramMetaFound = true;
+      if (url.toLowerCase().includes("instagram.com")) {
+        if (metaFound) instagramMetaFound = true;
+        instagramCounts = parseInstagramCounts(text) ?? instagramCounts;
       }
       toolResults.push({
         type: "tool_result",
