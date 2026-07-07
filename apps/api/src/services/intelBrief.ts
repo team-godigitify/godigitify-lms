@@ -21,7 +21,9 @@ const RELEVANT_META_PROPS = new Set([
   "description",
 ]);
 
-async function fetchUrlContent(url: string): Promise<string> {
+type FetchResult = { text: string; metaFound: boolean };
+
+async function fetchUrlContent(url: string): Promise<FetchResult> {
   try {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
@@ -44,7 +46,10 @@ async function fetchUrlContent(url: string): Promise<string> {
     clearTimeout(timer);
 
     if (!res.ok) {
-      return `[HTTP ${res.status} ${res.statusText} from ${url} — page may require login or does not exist]`;
+      return {
+        text: `[HTTP ${res.status} ${res.statusText} from ${url} — page may require login or does not exist]`,
+        metaFound: false,
+      };
     }
 
     const contentType = res.headers.get("content-type") ?? "";
@@ -53,7 +58,7 @@ async function fetchUrlContent(url: string): Promise<string> {
       !contentType.includes("html") &&
       !contentType.includes("json")
     ) {
-      return `[Non-text response (${contentType}) from ${url}]`;
+      return { text: `[Non-text response (${contentType}) from ${url}]`, metaFound: false };
     }
 
     const raw = await res.text();
@@ -89,10 +94,10 @@ async function fetchUrlContent(url: string): Promise<string> {
       .trim()
       .slice(0, MAX_BODY_CHARS);
 
-    return `${headSection}=== PAGE TEXT ===\n${bodyText}`;
+    return { text: `${headSection}=== PAGE TEXT ===\n${bodyText}`, metaFound: foundMeta.length > 0 };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    return `[Fetch failed for ${url}: ${msg}]`;
+    return { text: `[Fetch failed for ${url}: ${msg}]`, metaFound: false };
   }
 }
 
@@ -334,6 +339,14 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
     { role: "user", content: userMessage },
   ];
 
+  // Instagram blocks/soft-walls a large share of unauthenticated fetches. When that
+  // happens fetchUrlContent finds no og:/twitter: meta tags, but the model isn't
+  // reliably trustworthy about admitting it — it tends to fill in plausible-looking
+  // follower/following/post counts instead of nulls, even though the prompt tells it
+  // not to guess. Track ground truth here in code and overwrite the model's numbers
+  // below if no real meta tag was ever found for the Instagram URL.
+  let instagramMetaFound = false;
+
   for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
     const response = await anthropic.messages.create({
       model: MODEL,
@@ -385,6 +398,12 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
         throw new Error("AI output missing required fields");
       }
 
+      if (!instagramMetaFound) {
+        parsed.prospect_snapshot.instagram_followers = null;
+        parsed.prospect_snapshot.instagram_following = null;
+        parsed.prospect_snapshot.instagram_posts = null;
+      }
+
       return { output: parsed, modelUsed: MODEL };
     }
 
@@ -397,11 +416,14 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
 
       const { url } = block.input as { url: string };
       console.log(`[INTEL BRIEF] Fetching: ${url}`);
-      const content = await fetchUrlContent(url);
+      const { text, metaFound } = await fetchUrlContent(url);
+      if (metaFound && url.toLowerCase().includes("instagram.com")) {
+        instagramMetaFound = true;
+      }
       toolResults.push({
         type: "tool_result",
         tool_use_id: block.id,
-        content,
+        content: text,
       });
     }
 
