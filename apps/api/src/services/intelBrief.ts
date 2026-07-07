@@ -7,10 +7,19 @@ const MODEL = "claude-haiku-4-5-20251001";
 const MAX_TOOL_ITERATIONS = 4;
 const FETCH_TIMEOUT_MS = 15_000;
 // Kept small on purpose: this is resent as part of the conversation on every
-// remaining turn. Follower counts / bio live in the first ~2-3K chars of meta
-// tags; services/pricing/testimonials don't need more than a few KB of body text.
-const MAX_HEAD_CHARS = 4_000;
+// remaining turn. Body text (services/pricing/testimonials) doesn't need more
+// than a few KB — head meta tags are extracted separately, by name, below
+// (Instagram pads its <head> with icon/preload tags before og:description,
+// sometimes past 9K chars, so truncating the raw head is not safe — see
+// RELEVANT_META_PROPS).
 const MAX_BODY_CHARS = 8_000;
+const RELEVANT_META_PROPS = new Set([
+  "og:title",
+  "og:description",
+  "twitter:title",
+  "twitter:description",
+  "description",
+]);
 
 async function fetchUrlContent(url: string): Promise<string> {
   try {
@@ -49,11 +58,25 @@ async function fetchUrlContent(url: string): Promise<string> {
 
     const raw = await res.text();
 
-    // Extract <head> — this contains og: / twitter: meta tags which are
-    // server-side rendered by Instagram and most websites (follower counts live here)
+    // Extract og:/twitter:/description meta tags — server-side rendered by
+    // Instagram and most websites, this is where follower counts live.
+    // Scanned across the FULL head (not truncated — the tag we need can sit
+    // past 9K chars in) but only the handful of matching tags are kept, so
+    // this stays cheap regardless of how much icon/preload noise precedes it.
     const headMatch = raw.match(/<head[^>]*>([\s\S]*?)<\/head>/i);
-    const headSection = headMatch
-      ? `=== HEAD / META TAGS ===\n${headMatch[0].slice(0, MAX_HEAD_CHARS)}\n\n`
+    const foundMeta: string[] = [];
+    const headContent = headMatch?.[1];
+    if (headContent) {
+      for (const tag of headContent.matchAll(/<meta\b[^>]*>/gi)) {
+        const prop = tag[0].match(/(?:property|name)=["']([^"']+)["']/i)?.[1];
+        const content = tag[0].match(/content=["']([^"']*)["']/i)?.[1];
+        if (prop && content !== undefined && RELEVANT_META_PROPS.has(prop.toLowerCase())) {
+          foundMeta.push(`${prop}: ${content.slice(0, 500)}`);
+        }
+      }
+    }
+    const headSection = foundMeta.length
+      ? `=== META TAGS ===\n${foundMeta.join("\n")}\n\n`
       : "";
 
     // Strip JS/CSS, collapse whitespace, get readable page text
@@ -314,7 +337,12 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
   for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
     const response = await anthropic.messages.create({
       model: MODEL,
-      max_tokens: 4096,
+      // The full brief (11 fields incl. several 3-5 item arrays of detailed
+      // strings) reliably exceeds 4096 output tokens. A truncated tool call
+      // doesn't just fail cleanly — the cut-off JSON corrupts, spilling
+      // remaining fields as raw text into whatever string field was open.
+      // This is a ceiling, not a floor: only billed for tokens actually used.
+      max_tokens: 8192,
       system: SYSTEM_PROMPT,
       tools: [FETCH_TOOL, SUBMIT_TOOL],
       // Model must always call a tool — never drift into freeform prose that
