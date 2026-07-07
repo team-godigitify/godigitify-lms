@@ -165,10 +165,12 @@ export function useIntelBrief(leadId: string) {
         throw err;
       }
     },
-    // Poll every 5s while status is PENDING, stop when complete/failed
+    // Poll every 5s while generation is in flight. NEEDS_REVIEW is not final —
+    // the worker retries automatically in the background (up to 3 attempts)
+    // before settling on COMPLETE or FAILED, so keep polling through it too.
     refetchInterval: (query) => {
       const status = query.state.data?.status;
-      if (status === "PENDING") return 5_000;
+      if (status === "PENDING" || status === "NEEDS_REVIEW") return 5_000;
       return false;
     },
     staleTime: 30_000,

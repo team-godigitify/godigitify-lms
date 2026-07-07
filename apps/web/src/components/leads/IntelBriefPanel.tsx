@@ -485,23 +485,14 @@ export function IntelBriefPanel({ leadId, isProfileComplete, canManage }: Props)
 
   if (brief.status === "NEEDS_REVIEW" || !brief.validatedOutput) {
     return (
-      <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
-        <div className="flex items-center gap-2 text-amber-700 text-sm font-medium">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          Brief needs review — output could not be validated.
+      <div className="flex items-center gap-3 rounded-xl border border-amber-100 bg-amber-50 p-4 text-sm text-amber-700">
+        <RefreshCw className="h-4 w-4 shrink-0 animate-spin" />
+        <div>
+          <p className="font-medium">First attempt didn&apos;t validate — retrying automatically…</p>
+          <p className="mt-0.5 text-xs text-amber-600">
+            No action needed. This updates on its own; manually retrying now would queue a duplicate run.
+          </p>
         </div>
-        {canManage && (
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="mt-3"
-            onClick={() => generate.mutate()}
-            disabled={generate.isPending}
-          >
-            {generate.isPending ? "Retrying…" : "Retry"}
-          </Button>
-        )}
       </div>
     );
   }
