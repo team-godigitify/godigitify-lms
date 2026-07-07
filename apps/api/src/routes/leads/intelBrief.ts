@@ -58,7 +58,8 @@ export async function intelBriefRoutes(fastify: FastifyInstance): Promise<void> 
       }
 
       // Remove any existing failed/stale job so this retry is always a fresh run
-      await fastify.queues[QUEUES.INTEL_BRIEF].remove(`intel-brief-${leadId}`).catch(() => null);
+      const jobId = `intel-brief-${leadId}`;
+      await fastify.queues[QUEUES.INTEL_BRIEF].remove(jobId).catch(() => null);
 
       // Reset brief to PENDING so UI reflects the new attempt immediately
       await fastify.prisma.intelBrief.updateMany({
@@ -79,7 +80,7 @@ export async function intelBriefRoutes(fastify: FastifyInstance): Promise<void> 
         {
           attempts: 3,
           backoff: { type: "exponential", delay: 30_000 },
-          jobId: `intel-brief-${leadId}-${Date.now()}`,
+          jobId,
         },
       );
 
