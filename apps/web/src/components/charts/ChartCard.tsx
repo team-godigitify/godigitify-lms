@@ -66,7 +66,9 @@ export function ChartCard({
           {emptyAction}
         </div>
       ) : (
-        children
+        <div style={{ height }} className="overflow-hidden">
+          {children}
+        </div>
       )}
     </div>
   );

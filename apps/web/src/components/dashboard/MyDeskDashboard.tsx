@@ -28,7 +28,7 @@ export function MyDeskDashboard() {
   ).length;
 
   return (
-    <div className="flex flex-col flex-1 gap-6">
+    <div className="space-y-6">
       {/* Today strip — no period selector, this is always "right now" */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
@@ -67,11 +67,10 @@ export function MyDeskDashboard() {
       {/* Call activity chart */}
       <EmployeeCallChart />
 
-      {/* Follow-ups + activity — grows to fill leftover height so the
-          cards reach the bottom nav instead of leaving blank space */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 auto-rows-fr">
+      {/* Follow-ups + activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <FollowUpsDueToday />
-        <div className="bg-white border border-surface-200 rounded-xl p-5 h-full flex flex-col">
+        <div className="bg-white border border-surface-200 rounded-xl p-5">
           <h3 className="text-sm font-semibold text-gray-800 mb-4">
             My Recent Activity
           </h3>

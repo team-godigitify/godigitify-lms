@@ -31,7 +31,7 @@ export default function DashboardLayout({
   if (!user) return null;
 
   return (
-    <div className="flex h-screen overflow-hidden bg-surface-50">
+    <div className="flex h-dvh overflow-hidden bg-surface-50">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex">
         <Sidebar />
@@ -53,10 +53,8 @@ export default function DashboardLayout({
       {/* Main */}
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header onMenuClick={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6">
-          <div className="max-w-7xl mx-auto min-h-full flex flex-col">
-            {children}
-          </div>
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6 pb-20 lg:pb-6 [-webkit-overflow-scrolling:touch]">
+          <div className="max-w-7xl mx-auto">{children}</div>
         </main>
       </div>
 

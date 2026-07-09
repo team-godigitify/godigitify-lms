@@ -69,7 +69,7 @@ export function ActivityFeed() {
   });
 
   return (
-    <div className="bg-white border border-surface-200 rounded-xl p-5 h-full flex flex-col">
+    <div className="bg-white border border-surface-200 rounded-xl p-5 flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-semibold text-gray-800">Activity Feed</h3>
         {data && (
@@ -80,7 +80,7 @@ export function ActivityFeed() {
       </div>
 
       {isLoading ? (
-        <div className="space-y-4 flex-1">
+        <div className="space-y-4 h-96 overflow-hidden">
           {Array.from({ length: 6 }).map((_, i) => (
             <div key={i} className="flex gap-3 animate-pulse">
               <div className="w-8 h-8 rounded-full bg-surface-200 flex-shrink-0" />
@@ -92,16 +92,16 @@ export function ActivityFeed() {
           ))}
         </div>
       ) : isError ? (
-        <div className="flex-1 flex items-center justify-center gap-2 text-sm text-red-500">
+        <div className="h-96 flex items-center justify-center gap-2 text-sm text-red-500">
           <AlertCircle size={15} />
           Failed to load activity feed
         </div>
       ) : !data?.length ? (
-        <p className="flex-1 flex items-center justify-center text-sm text-gray-400">
+        <p className="h-96 flex items-center justify-center text-sm text-gray-400">
           No recent activity
         </p>
       ) : (
-        <div className="space-y-4 overflow-y-auto flex-1">
+        <div className="space-y-4 overflow-y-auto h-96">
           {data.map((item: ActivityFeedItem) => {
             const colorIdx =
               (item.user?.name?.charCodeAt(0) ?? 0) % COLORS.length;
