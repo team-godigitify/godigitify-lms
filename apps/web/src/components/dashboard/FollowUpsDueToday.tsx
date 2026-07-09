@@ -91,7 +91,7 @@ export function FollowUpsDueToday() {
   const totalCount = overdueLeads.length + upcomingLeads.length;
 
   return (
-    <div className="bg-white border border-surface-200 rounded-xl p-5 flex flex-col gap-4">
+    <div className="bg-white border border-surface-200 rounded-xl p-5 flex flex-col gap-4 h-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-800">Follow-ups</h3>
@@ -118,12 +118,12 @@ export function FollowUpsDueToday() {
           ))}
         </div>
       ) : totalCount === 0 ? (
-        <div className="text-center py-8">
+        <div className="flex-1 flex flex-col items-center justify-center text-center">
           <p className="text-sm text-green-600 font-medium">All caught up!</p>
           <p className="text-xs text-gray-400 mt-1">No follow-ups due</p>
         </div>
       ) : (
-        <div className="space-y-4 max-h-80 overflow-y-auto">
+        <div className="space-y-4 flex-1 overflow-y-auto">
           {/* Overdue */}
           {overdueLeads.length > 0 && (
             <div>

@@ -92,16 +92,16 @@ export function ActivityFeed() {
           ))}
         </div>
       ) : isError ? (
-        <div className="flex items-center gap-2 text-sm text-red-500 py-4">
+        <div className="flex-1 flex items-center justify-center gap-2 text-sm text-red-500">
           <AlertCircle size={15} />
           Failed to load activity feed
         </div>
       ) : !data?.length ? (
-        <p className="text-sm text-gray-400 text-center py-8">
+        <p className="flex-1 flex items-center justify-center text-sm text-gray-400">
           No recent activity
         </p>
       ) : (
-        <div className="space-y-4 overflow-y-auto flex-1 max-h-96">
+        <div className="space-y-4 overflow-y-auto flex-1">
           {data.map((item: ActivityFeedItem) => {
             const colorIdx =
               (item.user?.name?.charCodeAt(0) ?? 0) % COLORS.length;
