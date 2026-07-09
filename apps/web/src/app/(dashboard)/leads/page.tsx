@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "next/navigation";
+import { useState, useMemo } from "react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import dayjs from "dayjs";
 import {
@@ -12,6 +12,8 @@ import {
   CheckSquare,
   Users,
   ArrowRightLeft,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { useLeadList, useEmployeeList } from "@/hooks/useLeads";
 import { useQueryClient } from "@tanstack/react-query";
@@ -44,24 +46,57 @@ export default function LeadsPage() {
   const qc = useQueryClient();
   const isManager = user?.role === Role.ADMIN || user?.role === Role.SUB_ADMIN;
 
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [filters, setFilters] = useState<Filters>(DEFAULT_FILTERS);
 
-  // Re-apply URL params whenever the URL changes (sidebar links, deep-links, back/forward)
-  const syncFromUrl = useCallback(() => {
-    const patch: Partial<Filters> = {};
-    const assignedToId = searchParams.get("assignedToId");
-    if (assignedToId) patch.assignedToId = assignedToId;
+  // Filters live in the URL query string — this is the single source of truth.
+  // That means deep-links, the sidebar's "Overdue"/status links, and the
+  // browser back/forward buttons (e.g. after opening a lead and going back)
+  // all restore the exact same filtered view instead of resetting to defaults.
+  const filters: Filters = useMemo(() => {
+    const f: Filters = { ...DEFAULT_FILTERS };
+    const page = searchParams.get("page");
+    if (page) f.page = Number(page);
+    const pageSize = searchParams.get("pageSize");
+    if (pageSize) f.pageSize = Number(pageSize);
     const status = searchParams.get("status") as LeadStatus | null;
-    if (status) patch.status = status;
+    if (status) f.status = status;
+    const assignedToId = searchParams.get("assignedToId");
+    if (assignedToId) f.assignedToId = assignedToId;
+    const sourceId = searchParams.get("sourceId");
+    if (sourceId) f.sourceId = sourceId;
+    const search = searchParams.get("search");
+    if (search) f.search = search;
+    const dateFrom = searchParams.get("dateFrom");
+    if (dateFrom) f.dateFrom = dateFrom;
+    const dateTo = searchParams.get("dateTo");
+    if (dateTo) f.dateTo = dateTo;
+    const sortBy = searchParams.get("sortBy");
+    if (sortBy) f.sortBy = sortBy;
+    const sortOrder = searchParams.get("sortOrder");
+    if (sortOrder === "asc" || sortOrder === "desc") f.sortOrder = sortOrder;
     const overdue = searchParams.get("overdue");
-    if (overdue === "true") patch.overdue = true;
-    setFilters({ ...DEFAULT_FILTERS, ...patch });
+    if (overdue === "true") f.overdue = true;
+    const allStatuses = searchParams.get("allStatuses");
+    if (allStatuses === "true") f.allStatuses = true;
+    const excludeStatus = searchParams.get("excludeStatus");
+    if (excludeStatus) f.excludeStatus = excludeStatus;
+    return f;
   }, [searchParams]);
 
-  useEffect(() => {
-    syncFromUrl();
-  }, [syncFromUrl]);
+  function setFilters(next: Filters | ((prev: Filters) => Filters)) {
+    const resolved = typeof next === "function" ? next(filters) : next;
+    const params = new URLSearchParams();
+    Object.entries(resolved).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== "") params.set(k, String(v));
+    });
+    const qs = params.toString();
+    // replace (not push) — keeps a single history entry for the leads list so
+    // "back" from a lead detail page lands on this exact filtered/paginated view
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
+
   const [viewMode, setViewMode] = useState<"table" | "cards">("table");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkAssignModal, setBulkAssignModal] = useState(false);
@@ -132,6 +167,15 @@ export default function LeadsPage() {
     } finally {
       setBulkLoading(false);
     }
+  }
+
+  function handleSortChange(field: string) {
+    setFilters((prev) => ({
+      ...prev,
+      sortBy: field,
+      sortOrder: prev.sortBy === field && prev.sortOrder === "asc" ? "desc" : "asc",
+      page: 1,
+    }));
   }
 
   const hasFilters = Object.entries(filters).some(
@@ -205,14 +249,14 @@ export default function LeadsPage() {
 
       {/* Bulk action bar — shows when items selected */}
       {isManager && selected.size > 0 && (
-        <div className="bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 flex items-center gap-4">
+        <div className="bg-primary-50 border border-primary-200 rounded-xl px-4 py-3 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
             <CheckSquare size={15} className="text-primary" />
             <span className="text-sm font-semibold text-primary">
               {selected.size} lead{selected.size > 1 ? "s" : ""} selected
             </span>
           </div>
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 ml-auto flex-wrap">
             <Button
               size="sm"
               variant="secondary"
@@ -296,6 +340,8 @@ export default function LeadsPage() {
                 onToggle={toggleSelect}
                 onToggleAll={toggleSelectAll}
                 isManager={isManager}
+                filters={filters}
+                onSortChange={handleSortChange}
               />
             ) : (
               <LeadCards leads={data.leads} />
@@ -431,6 +477,24 @@ export default function LeadsPage() {
   );
 }
 
+function SortIcon({
+  field,
+  current,
+  order,
+}: {
+  field: string;
+  current: string | undefined;
+  order: string | undefined;
+}) {
+  if (current !== field)
+    return <ChevronUp size={12} className="text-gray-300" />;
+  return order === "asc" ? (
+    <ChevronUp size={12} className="text-primary" />
+  ) : (
+    <ChevronDown size={12} className="text-primary" />
+  );
+}
+
 // Lead table with bulk select checkboxes
 function LeadTableWithBulk({
   leads,
@@ -438,15 +502,30 @@ function LeadTableWithBulk({
   onToggle,
   onToggleAll,
   isManager,
+  filters,
+  onSortChange,
 }: {
   leads: LeadSummary[];
   selected: Set<string>;
   onToggle: (id: string) => void;
   onToggleAll: () => void;
   isManager: boolean;
+  filters: Filters;
+  onSortChange: (field: string) => void;
 }) {
-  // Import these from the existing LeadTable — we extend it with checkboxes
   const allSelected = leads.length > 0 && selected.size === leads.length;
+
+  // Only fields the backend actually supports sorting by
+  // (apps/api/src/routes/leads/list.ts SORT_FIELDS) get a clickable header.
+  const columns: Array<{ label: string; sortKey?: string; managerOnly?: boolean }> = [
+    { label: "Lead", sortKey: "name" },
+    { label: "Status", sortKey: "status" },
+    { label: "Industry" },
+    { label: "Counsellor", managerOnly: true },
+    { label: "Follow-up", sortKey: "nextFollowUpAt" },
+    { label: "Added", sortKey: "createdAt" },
+    { label: "Actions" },
+  ];
 
   return (
     <div className="bg-white border border-surface-200 rounded-xl overflow-hidden">
@@ -466,23 +545,29 @@ function LeadTableWithBulk({
                   />
                 </th>
               )}
-              {/* Re-use existing column headers from LeadTable */}
-              {[
-                "Lead",
-                "Status",
-                "Industry",
-                ...(isManager ? ["Counsellor"] : []),
-                "Follow-up",
-                "Added",
-                "Actions",
-              ].map((col) => (
-                <th
-                  key={col}
-                  className="px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide"
-                >
-                  {col}
-                </th>
-              ))}
+              {columns
+                .filter((c) => !c.managerOnly || isManager)
+                .map((col) => (
+                  <th
+                    key={col.label}
+                    onClick={() => col.sortKey && onSortChange(col.sortKey)}
+                    className={cn(
+                      "px-4 py-3 text-left text-xs font-semibold text-gray-400 uppercase tracking-wide",
+                      col.sortKey && "cursor-pointer hover:text-gray-700 select-none",
+                    )}
+                  >
+                    <div className="flex items-center gap-1">
+                      {col.label}
+                      {col.sortKey && (
+                        <SortIcon
+                          field={col.sortKey}
+                          current={filters.sortBy}
+                          order={filters.sortOrder}
+                        />
+                      )}
+                    </div>
+                  </th>
+                ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-surface-100">
@@ -513,14 +598,24 @@ function LeadTableWithBulk({
                     </td>
                   )}
                   <td className="px-4 py-3">
-                    <a href={`/leads/${lead.id}`}>
-                      <p className="text-sm font-semibold text-gray-900 hover:text-primary">
-                        {lead.name ?? lead.phone}
-                      </p>
+                    <Link href={`/leads/${lead.id}`}>
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-semibold text-gray-900 hover:text-primary">
+                          {lead.name ?? lead.phone}
+                        </p>
+                        {typeof lead.leadScore === "number" && lead.leadScore >= 70 && (
+                          <span
+                            title={`Hot lead — score ${lead.leadScore}`}
+                            className="text-[10px] bg-green-50 text-green-700 border border-green-200 px-1.5 py-0.5 rounded-full font-medium"
+                          >
+                            🔥 {lead.leadScore}
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {lead.phone}
                       </p>
-                    </a>
+                    </Link>
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={lead.status} />

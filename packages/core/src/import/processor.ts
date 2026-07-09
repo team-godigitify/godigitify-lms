@@ -50,6 +50,14 @@ type ExistingLeadForCheck = {
 // API layer creates DuplicateQueue records for duplicates.
 // Unknown columns (e.g. legacy "email", "studentName") are silently ignored.
 // ─────────────────────────────────────────
+// Spreadsheet URLs often arrive without a protocol (e.g. "business.com"),
+// which later renders as a broken relative link in the UI instead of an
+// external site.
+function normalizeUrl(url: string | null): string | null {
+  if (!url) return url;
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 export function processImportRows(
   rows: ExcelRow[],
   existingLeads: ExistingLeadForCheck[],
@@ -73,8 +81,8 @@ export function processImportRows(
       name: row.name?.trim() ?? null,
       phone: row.phone.trim(),
       altPhone: row.altPhone?.trim() ?? null,
-      instagramUrl: row.instagramUrl?.trim() ?? null,
-      websiteUrl: row.websiteUrl?.trim() ?? null,
+      instagramUrl: normalizeUrl(row.instagramUrl?.trim() ?? null),
+      websiteUrl: normalizeUrl(row.websiteUrl?.trim() ?? null),
       email: row.email?.trim() ?? null,
       industry: row.industry?.trim() ?? null,
       city: row.city?.trim() ?? null,

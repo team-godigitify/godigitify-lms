@@ -1,17 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import dynamic from "next/dynamic";
 import { useTrend } from "@/hooks/useDashboard";
-import { PeriodSelector } from "./PeriodSelector";
-import type { Period } from "@/hooks/useDashboard";
+import { useAnalyticsFilters } from "@/context/AnalyticsFilterContext";
+import { ChartCard, Chart } from "@/components/charts/ChartCard";
+import { CHART_COLORS } from "@/config/chartTheme";
 import dayjs from "dayjs";
 
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
-
 export function TrendChart() {
-  const [period, setPeriod] = useState<Period>("last30");
-  const { data, isLoading } = useTrend(period);
+  const { period, branchId } = useAnalyticsFilters();
+  const { data, isLoading } = useTrend(period, branchId);
 
   type TrendPoint = { date: string; created: number; confirmed: number };
   const trend: TrendPoint[] =
@@ -29,7 +26,7 @@ export function TrendChart() {
       toolbar: { show: false },
       background: "transparent",
     },
-    colors: ["#005826", "#22c55e"],
+    colors: [CHART_COLORS.primary, CHART_COLORS.accentGreen],
     stroke: { curve: "smooth", width: 2 },
     fill: {
       type: "gradient",
@@ -52,7 +49,7 @@ export function TrendChart() {
       labels: { style: { fontSize: "11px" } },
       min: 0,
     },
-    grid: { borderColor: "#f1f5f9", strokeDashArray: 4 },
+    grid: { borderColor: CHART_COLORS.grid, strokeDashArray: 4 },
     legend: {
       position: "top",
       fontSize: "12px",
@@ -64,27 +61,16 @@ export function TrendChart() {
   };
 
   return (
-    <div className="bg-white border border-surface-200 rounded-xl p-5">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-gray-800">
-          Leads & Confirmations
-        </h3>
-        <PeriodSelector value={period} onChange={setPeriod} compact />
-      </div>
-
-      {isLoading ? (
-        <div className="h-48 bg-surface-50 rounded animate-pulse" />
-      ) : (
-        <ApexChart
-          type="area"
-          height={220}
-          series={[
-            { name: "Leads Created", data: created },
-            { name: "Clients", data: confirmed },
-          ]}
-          options={options}
-        />
-      )}
-    </div>
+    <ChartCard title="Leads & Confirmations" isLoading={isLoading} height={220}>
+      <Chart
+        type="area"
+        height={220}
+        series={[
+          { name: "Leads Created", data: created },
+          { name: "Clients", data: confirmed },
+        ]}
+        options={options}
+      />
+    </ChartCard>
   );
 }

@@ -113,6 +113,14 @@ export function mapMetaFieldsToLead(
     return "";
   };
 
+  // Meta lead form fields often arrive without a protocol (e.g. "business.com"),
+  // which later renders as a broken relative link in the UI.
+  const getUrl = (...keys: string[]): string => {
+    const v = get(...keys);
+    if (!v) return v;
+    return /^https?:\/\//i.test(v) ? v : `https://${v}`;
+  };
+
   // Lead name — combine first+last if full_name not present
   let name = get("full_name", "name", "contact_name");
   if (!name) {
@@ -133,8 +141,8 @@ export function mapMetaFieldsToLead(
     name,
     phone,
     email: get("email", "email_address", "email_id"),
-    instagramUrl: get("instagram_url", "instagram", "instagram_profile"),
-    websiteUrl: get("website_url", "website", "business_website"),
+    instagramUrl: getUrl("instagram_url", "instagram", "instagram_profile"),
+    websiteUrl: getUrl("website_url", "website", "business_website"),
     industry: get("industry", "business_type", "niche", "sector"),
     city: get("city", "location", "current_city"),
   };

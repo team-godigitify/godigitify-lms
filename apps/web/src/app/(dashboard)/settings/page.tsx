@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Tag, Building2, ChevronRight, Share2 } from "lucide-react";
+import { Tag, Building2, ChevronRight, Share2, Megaphone } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
+import { AuthGuard } from "@/components/AuthGuard";
 import { Role } from "@lms/types";
 
 const SETTINGS_SECTIONS = [
@@ -13,6 +12,12 @@ const SETTINGS_SECTIONS = [
     icon: Tag,
     label: "Lead Sources",
     description: "Manage lead source types",
+  },
+  {
+    href: "/settings/campaigns",
+    icon: Megaphone,
+    label: "Campaigns",
+    description: "Track named marketing pushes for ROI reporting",
   },
   {
     href: "/settings/branches",
@@ -33,17 +38,13 @@ const SETTINGS_SECTIONS = [
 
 export default function SettingsPage() {
   const { user } = useAuthStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (user && user.role === Role.EMPLOYEE) router.replace("/dashboard");
-  }, [user, router]);
 
   const sections = SETTINGS_SECTIONS.filter(
     (s) => !s.adminOnly || user?.role === Role.ADMIN,
   );
 
   return (
+    <AuthGuard allowedRoles={[Role.ADMIN, Role.SUB_ADMIN]}>
     <div className="max-w-2xl space-y-5">
       <div>
         <h1 className="text-xl font-bold text-gray-900">Settings</h1>
@@ -78,5 +79,6 @@ export default function SettingsPage() {
         })}
       </div>
     </div>
+    </AuthGuard>
   );
 }

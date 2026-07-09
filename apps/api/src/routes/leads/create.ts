@@ -13,6 +13,7 @@ import {
   invalidateAnalyticsCache,
   invalidateActivityCache,
 } from "../../services/cache";
+import { recomputeLeadScore } from "../../services/leadScoring";
 
 export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
   fastify.post(
@@ -174,7 +175,9 @@ export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
             city: body.city ?? null,
             sourceId: body.sourceId ?? null,
             sourceOther: body.sourceOther ?? null,
+            campaignId: body.campaignId ?? null,
             remarks: body.remarks ?? null,
+            tags: body.tags ?? [],
             nextFollowUpAt: body.nextFollowUpAt ? new Date(body.nextFollowUpAt) : null,
             branchId,
             createdById: userId,
@@ -205,6 +208,7 @@ export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
         return newLead;
       });
 
+      await recomputeLeadScore(fastify.prisma, lead.id);
       await invalidateAnalyticsCache(fastify.redis);
       await invalidateActivityCache(fastify.redis, branchId, userId);
 

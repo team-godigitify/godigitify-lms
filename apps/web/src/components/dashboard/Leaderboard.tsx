@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { useEmployeePerformance } from "@/hooks/useDashboard";
-import { PeriodSelector } from "./PeriodSelector";
-import type { Period } from "@/hooks/useDashboard";
+import { useAnalyticsFilters } from "@/context/AnalyticsFilterContext";
 import { cn } from "@/lib/utils";
 import { Trophy, TrendingUp, Users, Star, ChevronRight } from "lucide-react";
 
@@ -42,8 +40,8 @@ function ScoreBar({ value }: { value: number }) {
 }
 
 export function Leaderboard() {
-  const [period, setPeriod] = useState<Period>("last30");
-  const { data, isLoading } = useEmployeePerformance(period);
+  const { period, branchId } = useAnalyticsFilters();
+  const { data, isLoading } = useEmployeePerformance(period, branchId);
 
   const employees: EmployeeRow[] =
     data &&
@@ -68,7 +66,6 @@ export function Leaderboard() {
             Performance Leaderboard
           </h3>
         </div>
-        <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
       {isLoading ? (
@@ -141,7 +138,7 @@ export function Leaderboard() {
                   <Link
                     href={`/leads?assignedToId=${empId}&status=CLIENT`}
                     title="Clients closed"
-                    className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 px-1.5 py-0.5 rounded transition-colors"
+                    className="flex items-center gap-1 text-green-600 hover:text-green-700 hover:bg-green-50 px-2 py-1.5 rounded transition-colors"
                   >
                     <Star size={11} />
                     <span className="text-xs font-semibold">
@@ -153,7 +150,7 @@ export function Leaderboard() {
                   <Link
                     href={`/leads?assignedToId=${empId}`}
                     title="Total leads assigned"
-                    className="flex items-center gap-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 px-1.5 py-0.5 rounded transition-colors"
+                    className="flex items-center gap-1 text-blue-500 hover:text-blue-600 hover:bg-blue-50 px-2 py-1.5 rounded transition-colors"
                   >
                     <Users size={11} />
                     <span className="text-xs">
@@ -165,7 +162,7 @@ export function Leaderboard() {
                   <Link
                     href={`/analytics/employees/${empId}`}
                     title="Conversion rate — view full report"
-                    className="flex items-center gap-1 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 px-1.5 py-0.5 rounded transition-colors"
+                    className="flex items-center gap-1 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 px-2 py-1.5 rounded transition-colors"
                   >
                     <TrendingUp size={11} />
                     <span className="text-xs">

@@ -3,6 +3,7 @@ import { authenticate } from "../../middleware/authenticate";
 import { canUpdateLead } from "@lms/auth";
 import { Role, UpdateLeadSchema } from "@lms/types";
 import { validateBody } from "../../middleware/validate";
+import { recomputeLeadScore } from "../../services/leadScoring";
 
 export async function updateLeadRoute(fastify: FastifyInstance): Promise<void> {
   fastify.patch(
@@ -94,6 +95,8 @@ export async function updateLeadRoute(fastify: FastifyInstance): Promise<void> {
 
         return updatedLead;
       });
+
+      await recomputeLeadScore(fastify.prisma, id);
 
       return reply.status(200).send({ success: true, data: updated });
     },

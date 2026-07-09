@@ -1,10 +1,9 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import dayjs from "dayjs";
 import { useMyCallStats } from "@/hooks/useDashboard";
-
-const ApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import { ChartCard, Chart } from "@/components/charts/ChartCard";
+import { CHART_COLORS } from "@/config/chartTheme";
 
 export function EmployeeCallChart() {
   const { data, isLoading } = useMyCallStats();
@@ -20,7 +19,7 @@ export function EmployeeCallChart() {
       toolbar: { show: false },
       background: "transparent",
     },
-    colors: ["#005826", "#22c55e"],
+    colors: [CHART_COLORS.primary, CHART_COLORS.accentGreen],
     plotOptions: {
       bar: { borderRadius: 4, columnWidth: "55%" },
     },
@@ -49,7 +48,7 @@ export function EmployeeCallChart() {
       },
     ],
     legend: { position: "top", fontSize: "12px" },
-    grid: { borderColor: "#f1f5f9", strokeDashArray: 4 },
+    grid: { borderColor: CHART_COLORS.grid, strokeDashArray: 4 },
     tooltip: { shared: true, intersect: false },
   };
 
@@ -58,21 +57,17 @@ export function EmployeeCallChart() {
     { name: "Minutes Talked", type: "line", data: minutes },
   ];
 
-  return (
-    <div className="bg-white border border-surface-200 rounded-xl p-5">
-      <h3 className="text-sm font-semibold text-gray-800 mb-4">
-        My Call Activity — Last 7 Days
-      </h3>
+  const isEmpty = daily.length === 0 || daily.every((d) => d.callCount === 0);
 
-      {isLoading ? (
-        <div className="h-48 bg-surface-50 rounded animate-pulse" />
-      ) : daily.every((d) => d.callCount === 0) ? (
-        <div className="h-48 flex items-center justify-center text-sm text-gray-400">
-          No calls logged in the last 7 days
-        </div>
-      ) : (
-        <ApexChart type="line" height={220} series={series} options={options} />
-      )}
-    </div>
+  return (
+    <ChartCard
+      title="My Call Activity — Last 7 Days"
+      isLoading={isLoading}
+      isEmpty={isEmpty}
+      emptyMessage="No calls logged in the last 7 days"
+      height={220}
+    >
+      <Chart type="line" height={220} series={series} options={options} />
+    </ChartCard>
   );
 }

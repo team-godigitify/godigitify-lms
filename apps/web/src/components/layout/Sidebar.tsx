@@ -16,6 +16,9 @@ import {
   LogOut,
   Handshake,
   UserCircle,
+  LineChart,
+  FileText,
+  Megaphone,
   X,
 } from "lucide-react";
 import { useAuthStore } from "@/store/auth";
@@ -50,6 +53,18 @@ const NAV_ITEMS: NavItem[] = [
     roles: [Role.ADMIN, Role.SUB_ADMIN],
   },
   {
+    label: "Reports",
+    href: "/reports",
+    icon: FileText,
+    roles: [Role.ADMIN, Role.SUB_ADMIN],
+  },
+  {
+    label: "My Performance",
+    href: "/my-performance",
+    icon: LineChart,
+    roles: [Role.EMPLOYEE],
+  },
+  {
     label: "Import",
     href: "/import",
     icon: Upload,
@@ -65,7 +80,13 @@ const NAV_ITEMS: NavItem[] = [
     label: "Lead Sources",
     href: "/settings/sources",
     icon: Tag,
-    roles: [Role.SUB_ADMIN],
+    roles: [Role.ADMIN, Role.SUB_ADMIN],
+  },
+  {
+    label: "Campaigns",
+    href: "/settings/campaigns",
+    icon: Megaphone,
+    roles: [Role.ADMIN, Role.SUB_ADMIN],
   },
   {
     label: "Settings",
@@ -108,13 +129,28 @@ export function Sidebar({ onClose }: Props) {
           isExpanded ? "items-center gap-3" : "items-center justify-center",
         )}
       >
-        <div className={cn("rounded-xl overflow-hidden shrink-0", !isExpanded ? "w-10 h-10" : "w-50 h-50")}>
+        <div
+          className={cn(
+            "relative rounded-xl overflow-hidden shrink-0",
+            !isExpanded ? "w-10 h-10" : "w-50 h-50",
+          )}
+        >
+          {/* logo.png is a wide icon+wordmark lockup (~4.1:1) — fitting the
+              whole thing into a 40x40 collapsed box via object-contain
+              shrinks it down to a ~10px-tall illegible strip. When
+              collapsed, scale by height instead and clip to the icon mark
+              on the left rather than squashing the wordmark in with it. */}
           <Image
             src="/logo.png"
             alt="Godigitify"
-            width={isExpanded ? 80 : 40}
-            height={isExpanded ? 80 : 40}
-            className="w-full h-full object-contain"
+            width={1414}
+            height={342}
+            className={cn(
+              "object-contain object-left",
+              isExpanded
+                ? "w-full h-full"
+                : "absolute left-0 top-1/2 -translate-y-1/2 h-10 w-auto max-w-none",
+            )}
             priority
           />
         </div>

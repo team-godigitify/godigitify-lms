@@ -48,12 +48,28 @@ export async function leadListRoute(fastify: FastifyInstance): Promise<void> {
       if (query.search) filters.search = query.search;
       if (query.dateFrom) filters.dateFrom = query.dateFrom;
       if (query.dateTo) filters.dateTo = query.dateTo;
-      if (role !== "EMPLOYEE" && query.branchId)
-        filters.branchId = query.branchId;
+      // ADMIN may query any branch (or omit for all); SUB_ADMIN is always
+      // locked to their own branch regardless of what's passed in the query —
+      // mirrors effectiveBranchId() in routes/analytics/index.ts.
+      if (role === "ADMIN") {
+        if (query.branchId) filters.branchId = query.branchId;
+      } else if (role === "SUB_ADMIN") {
+        filters.branchId = request.user.branchId;
+      }
       if (query.overdue) filters.overdue = true;
       if (query.industry) filters.industry = query.industry;
       if (query.leadPriority) filters.leadPriority = query.leadPriority as LeadPriority;
       if (query.isProfileComplete !== undefined) filters.isProfileComplete = query.isProfileComplete;
+      if (query.tags) filters.tags = query.tags.split(",").map((t) => t.trim()).filter(Boolean);
+      if (query.allStatuses) filters.allStatuses = true;
+      if (query.excludeStatus) {
+        filters.excludeStatuses = query.excludeStatus
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean) as LeadStatus[];
+      }
+      if (query.leadScoreMin !== undefined) filters.leadScoreMin = query.leadScoreMin;
+      if (query.leadScoreMax !== undefined) filters.leadScoreMax = query.leadScoreMax;
 
       const where = buildLeadWhereClause({
         userId,

@@ -11,6 +11,8 @@ export type LeadSummary = {
   status: LeadStatus;
   industry: string | null;
   isProfileComplete: boolean;
+  tags: string[];
+  leadScore: number | null;
   nextFollowUpAt: string | null;
   createdAt: string;
   isDuplicate: boolean;
@@ -40,6 +42,8 @@ export type LeadFilters = {
   sortBy?: string;
   sortOrder?: "asc" | "desc";
   overdue?: boolean;
+  allStatuses?: boolean;
+  excludeStatus?: string;
 };
 
 // ── Lead list with auto-refresh ──
@@ -306,27 +310,31 @@ export function useBulkStatusUpdate() {
 }
 
 // ── Get unassigned leads ──
-export function useUnassignedLeads() {
+export function useUnassignedLeads(branchId?: string) {
   return useQuery({
-    queryKey: ["leads", "unassigned"],
+    queryKey: ["leads", "unassigned", branchId],
     queryFn: async () => {
+      const params = branchId ? `?branchId=${branchId}` : "";
       const { data } = await api.get<{ success: true; data: LeadListResponse }>(
-        "/leads/unassigned",
+        `/leads/unassigned${params}`,
       );
       return data.data;
     },
   });
 }
 
-// ── Get overdue leads ──
+// ── Get overdue leads (role-scoped server-side: employees see only their
+// own, managers see branch-wide) — single shared hook, do not duplicate ──
 export function useOverdueLeads() {
   return useQuery({
     queryKey: ["leads", "overdue"],
     queryFn: async () => {
-      const { data } = await api.get<{ success: true; data: LeadListResponse }>(
-        "/leads/overdue",
-      );
+      const { data } = await api.get<{
+        success: true;
+        data: { leads: LeadSummary[] };
+      }>("/leads/overdue");
       return data.data;
     },
+    refetchInterval: 5 * 60_000,
   });
 }

@@ -15,6 +15,10 @@ export type {
   IntelBrief,
   RefreshToken,
   PasswordResetToken,
+  Campaign,
+  Target,
+  Notification,
+  SavedView,
 } from "./generated/client";
 
 export {
@@ -23,4 +27,6 @@ export {
   LeadPriority,
   IntelBriefStatus,
   InteractionType,
+  TargetScope,
+  TargetMetric,
 } from "./generated/client";

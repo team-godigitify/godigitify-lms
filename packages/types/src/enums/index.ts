@@ -42,6 +42,18 @@ export enum InteractionType {
   STATUS_CHANGED = 'STATUS_CHANGED',
 }
 
+export enum TargetScope {
+  COMPANY = 'COMPANY',
+  BRANCH = 'BRANCH',
+  EMPLOYEE = 'EMPLOYEE',
+}
+
+export enum TargetMetric {
+  REVENUE = 'REVENUE',
+  LEADS = 'LEADS',
+  CONVERSIONS = 'CONVERSIONS',
+}
+
 // Lead status transition map.
 // Defines which statuses a lead can move TO from each current status.
 // This is the state machine contract — core enforces it, frontend reads it.

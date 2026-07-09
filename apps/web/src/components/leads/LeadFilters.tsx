@@ -30,7 +30,15 @@ export function LeadFilters({ filters, onChange, onReset }: Props) {
     () => !!filters.assignedToId || !!filters.status || !!filters.sourceId,
   );
 
-  const selectedYear = filters.dateFrom?.slice(0, 4) ?? "";
+  // Only treat this as "year mode" when both bounds are the exact Jan 1 – Dec 31
+  // boundary of the same year — otherwise picking any custom date whose year
+  // happens to match an entry in the year dropdown would hide the date pickers.
+  const isYearRange =
+    !!filters.dateFrom &&
+    !!filters.dateTo &&
+    filters.dateFrom === `${filters.dateFrom.slice(0, 4)}-01-01` &&
+    filters.dateTo === `${filters.dateFrom.slice(0, 4)}-12-31`;
+  const selectedYear = isYearRange ? filters.dateFrom!.slice(0, 4) : "";
 
   function handleYearChange(year: string) {
     if (!year) {
@@ -280,24 +288,45 @@ export function LeadFilters({ filters, onChange, onReset }: Props) {
             ))}
           </select>
 
-          {/* Date from (custom range) */}
+          {/* Custom date range */}
           {!selectedYear && (
-            <input
-              type="date"
-              value={filters.dateFrom ?? ""}
-              aria-label="Filter from date"
-              title="Filter from date"
-              onChange={(e) => {
-                const value = e.target.value;
-                if (value) {
-                  onChange({ ...filters, dateFrom: value, page: 1 });
-                  return;
-                }
-                const { dateFrom: _dateFrom, ...rest } = filters;
-                onChange({ ...rest, page: 1 });
-              }}
-              className="px-3 py-2 rounded-lg border border-surface-200 text-sm outline-none focus:border-primary bg-white"
-            />
+            <div className="col-span-2 flex items-center gap-2">
+              <input
+                type="date"
+                value={filters.dateFrom ?? ""}
+                max={filters.dateTo ?? undefined}
+                aria-label="Filter from date"
+                title="Filter from date"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    onChange({ ...filters, dateFrom: value, page: 1 });
+                    return;
+                  }
+                  const { dateFrom: _dateFrom, ...rest } = filters;
+                  onChange({ ...rest, page: 1 });
+                }}
+                className="w-full px-3 py-2 rounded-lg border border-surface-200 text-sm outline-none focus:border-primary bg-white"
+              />
+              <span className="text-xs text-gray-400 shrink-0">to</span>
+              <input
+                type="date"
+                value={filters.dateTo ?? ""}
+                min={filters.dateFrom ?? undefined}
+                aria-label="Filter to date"
+                title="Filter to date"
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    onChange({ ...filters, dateTo: value, page: 1 });
+                    return;
+                  }
+                  const { dateTo: _dateTo, ...rest } = filters;
+                  onChange({ ...rest, page: 1 });
+                }}
+                className="w-full px-3 py-2 rounded-lg border border-surface-200 text-sm outline-none focus:border-primary bg-white"
+              />
+            </div>
           )}
         </div>
       )}

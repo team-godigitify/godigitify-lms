@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 import { useClientsReport } from "@/hooks/useDashboard";
-import { PeriodSelector } from "./PeriodSelector";
-import type { Period } from "@/hooks/useDashboard";
+import { useAnalyticsFilters } from "@/context/AnalyticsFilterContext";
+import { formatRupees } from "@/lib/format";
 import { Handshake, TrendingUp, IndianRupee, ExternalLink } from "lucide-react";
 import dayjs from "dayjs";
 
@@ -23,17 +23,9 @@ type ReportData = {
   leads: ClientLead[];
 };
 
-function formatRupees(amount: number) {
-  if (amount >= 100_000)
-    return `₹${(amount / 100_000).toFixed(1)}L`;
-  if (amount >= 1_000)
-    return `₹${(amount / 1_000).toFixed(1)}K`;
-  return `₹${amount}`;
-}
-
 export function ClientDealsReport() {
-  const [period, setPeriod] = useState<Period>("last30");
-  const { data, isLoading } = useClientsReport(period);
+  const { period, branchId } = useAnalyticsFilters();
+  const { data, isLoading } = useClientsReport(period, branchId);
 
   const report = data as ReportData | undefined;
   const leads = report?.leads ?? [];
@@ -48,7 +40,6 @@ export function ClientDealsReport() {
           </div>
           <h3 className="text-sm font-semibold text-gray-800">Client Deals</h3>
         </div>
-        <PeriodSelector value={period} onChange={setPeriod} />
       </div>
 
       {/* Summary strip */}
@@ -164,9 +155,9 @@ export function ClientDealsReport() {
           {leads.length > 8 && (
             <p className="text-center text-xs text-gray-400 mt-2 pt-2 border-t border-surface-100">
               Showing 8 of {leads.length} deals —{" "}
-              <a href="/leads?status=CLIENT" className="text-primary hover:underline">
+              <Link href="/leads?status=CLIENT" className="text-primary hover:underline">
                 view all
-              </a>
+              </Link>
             </p>
           )}
         </div>

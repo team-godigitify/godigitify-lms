@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import Link from "next/link";
 import {
   Plus,
@@ -21,6 +20,7 @@ import {
 } from "@/hooks/useUsers";
 import { useBranches } from "@/hooks/useBranches";
 import { useAuthStore } from "@/store/auth";
+import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
@@ -65,7 +65,6 @@ interface DeactivatePreview {
 
 export default function EmployeesPage() {
   const { user } = useAuthStore();
-  const router = useRouter();
   const qc = useQueryClient();
   const { success, error: notifyError } = useNotifications();
 
@@ -104,10 +103,6 @@ export default function EmployeesPage() {
   >(null);
   const [bulkBranchId, setBulkBranchId] = useState("");
   const [bulkLoading, setBulkLoading] = useState(false);
-
-  useEffect(() => {
-    if (user && user.role === Role.EMPLOYEE) router.replace("/dashboard");
-  }, [user, router]);
 
   const { data: usersData, isLoading } = useUsers({
     search: filters.search || undefined,
@@ -227,9 +222,10 @@ export default function EmployeesPage() {
     }
   }
 
-  if (!user || user.role === Role.EMPLOYEE) return null;
+  if (!user) return null;
 
   return (
+    <AuthGuard allowedRoles={[Role.ADMIN, Role.SUB_ADMIN]}>
     <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -835,5 +831,6 @@ export default function EmployeesPage() {
         )}
       </Modal>
     </div>
+    </AuthGuard>
   );
 }

@@ -8,6 +8,7 @@ import {
   invalidateAnalyticsCache,
   invalidateActivityCache,
 } from "../../services/cache";
+import { recomputeLeadScore } from "../../services/leadScoring";
 
 export async function transitionLeadRoute(
   fastify: FastifyInstance,
@@ -126,6 +127,7 @@ export async function transitionLeadRoute(
         });
       });
 
+      await recomputeLeadScore(fastify.prisma, id);
       await invalidateAnalyticsCache(fastify.redis);
       await invalidateActivityCache(
         fastify.redis,

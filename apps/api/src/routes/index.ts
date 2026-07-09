@@ -9,6 +9,9 @@ import { analyticsRoutes } from "./analytics";
 import { activityRoutes } from "./activity";
 import { settingsRoutes } from "./settings";
 import { metaRoutes } from "./meta";
+import { targetRoutes } from "./targets";
+import { campaignRoutes } from "./campaigns";
+import { reportRoutes } from "./reports";
 
 export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(authRoutes, { prefix: "/api/v1/auth" });
@@ -28,4 +31,7 @@ export async function registerRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(settingsRoutes, { prefix: "/api/v1/settings" });
   // Meta webhook + lead capture (Lead Forms + WhatsApp Cloud API)
   await fastify.register(metaRoutes, { prefix: "/api/v1/meta" });
+  await fastify.register(targetRoutes, { prefix: "/api/v1/targets" });
+  await fastify.register(campaignRoutes, { prefix: "/api/v1/campaigns" });
+  await fastify.register(reportRoutes, { prefix: "/api/v1/reports" });
 }

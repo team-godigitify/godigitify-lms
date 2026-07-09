@@ -57,10 +57,13 @@ export const CreateLeadSchema = z.object({
   // Source
   sourceId: z.string().cuid().optional(),
   sourceOther: z.string().trim().max(100).optional(),
+  // Specific ad push within sourceId, for campaign ROI reporting — see /settings/campaigns
+  campaignId: z.string().cuid().optional(),
 
   // Pipeline
   remarks: z.string().trim().max(1000).optional(),
   nextFollowUpAt: z.string().datetime().nullable().optional(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(10).optional(),
 
   // Assignment — only used by admin/sub-admin (enforced in route)
   assignedToId: z.string().cuid().optional(),
@@ -89,8 +92,10 @@ export const UpdateLeadSchema = z.object({
   dealSizeEstimate: z.number().positive("Deal size must be a positive number").optional(),
   sourceId: z.string().cuid().optional(),
   sourceOther: z.string().trim().max(100).optional(),
+  campaignId: z.string().cuid().nullable().optional(),
   remarks: z.string().trim().max(1000).optional(),
   nextFollowUpAt: z.string().datetime().nullable().optional(),
+  tags: z.array(z.string().trim().min(1).max(30)).max(10).optional(),
 });
 
 // ── State Transition ──
@@ -136,6 +141,15 @@ export const LeadListQuerySchema = z.object({
   industry: z.string().trim().max(100).optional(),
   leadPriority: z.nativeEnum(LeadPriority).optional(),
   isProfileComplete: z.coerce.boolean().optional(),
+  tags: z.string().trim().max(200).optional(),
+  leadScoreMin: z.coerce.number().int().min(0).max(100).optional(),
+  leadScoreMax: z.coerce.number().int().min(0).max(100).optional(),
+  // Dashboard KPI drill-down links use these to reconstruct the exact same
+  // filter the card's count used — the default view's "hide CLIENT/INTERESTED"
+  // carve-out is a UX choice for organic browsing, not the definition of
+  // "every lead," so a KPI drill-down needs to be able to bypass it.
+  allStatuses: z.coerce.boolean().optional(),
+  excludeStatus: z.string().trim().max(200).optional(),
   search: z.string().trim().max(100).optional(),
   dateFrom: z
     .string()

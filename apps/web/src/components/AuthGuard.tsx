@@ -8,9 +8,11 @@ import type { Role } from "@lms/types";
 type Props = {
   children: React.ReactNode;
   allowedRoles?: Role[];
+  /** Where to send an authenticated user whose role isn't in allowedRoles. */
+  redirectTo?: string;
 };
 
-export function AuthGuard({ children, allowedRoles }: Props) {
+export function AuthGuard({ children, allowedRoles, redirectTo = "/dashboard" }: Props) {
   const router = useRouter();
   const { isAuthenticated, user, isLoading } = useAuthStore();
 
@@ -23,9 +25,9 @@ export function AuthGuard({ children, allowedRoles }: Props) {
     }
 
     if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-      router.replace("/dashboard");
+      router.replace(redirectTo);
     }
-  }, [isAuthenticated, isLoading, user, allowedRoles, router]);
+  }, [isAuthenticated, isLoading, user, allowedRoles, redirectTo, router]);
 
   if (isLoading) {
     return (
@@ -39,6 +41,7 @@ export function AuthGuard({ children, allowedRoles }: Props) {
   }
 
   if (!isAuthenticated) return null;
+  if (allowedRoles && user && !allowedRoles.includes(user.role)) return null;
 
   return <>{children}</>;
 }

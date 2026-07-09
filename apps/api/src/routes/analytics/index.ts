@@ -6,10 +6,18 @@ import { Role } from "@lms/types";
 import {
   getDashboardOverview,
   getEmployeePerformance,
+  getEmployeeCallLog,
+  getEmployeeInteractedLeads,
   getPipelineAnalysis,
   getSourceReport,
   getFollowUpCompliance,
   getConfirmedReport,
+  getLeadsAtRisk,
+  getWorkloadBalance,
+  getClientsNeedingAttention,
+  getRevenueForecast,
+  getBranchComparison,
+  getCampaignPerformance,
 } from "./service";
 import {
   generateCSV,
@@ -96,6 +104,29 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.status(200).send({ success: true, data });
   });
 
+  // ── GET /analytics/me ── self-performance, any authenticated role.
+  // No ADMIN/SUB_ADMIN guard — an employee may always see their own data.
+  fastify.get("/me", { preHandler: authenticate }, async (request, reply) => {
+    const q = request.query as { period?: Period; dateFrom?: string; dateTo?: string };
+
+    const data = await getEmployeePerformance({
+      prisma: fastify.prisma,
+      period: q.period ?? "last30",
+      ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
+      ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
+      employeeId: request.user.id,
+    });
+
+    if (data.employees.length === 0) {
+      return reply.status(404).send({
+        success: false,
+        error: { code: "NOT_FOUND", message: "No performance data for this account" },
+      });
+    }
+
+    return reply.status(200).send({ success: true, data: data.employees[0] });
+  });
+
   // ── GET /analytics/employees/:id ── single employee drill-down
   fastify.get("/employees/:id", { preHandler: guard }, async (request, reply) => {
     const { id: employeeId } = request.params as { id: string };
@@ -114,6 +145,104 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
     }
 
     return reply.status(200).send({ success: true, data: data.employees[0] });
+  });
+
+  // ── GET /analytics/employees/:id/calls — paginated call log behind callCount ──
+  fastify.get("/employees/:id/calls", { preHandler: guard }, async (request, reply) => {
+    const { id: employeeId } = request.params as { id: string };
+    const q = request.query as {
+      period?: Period;
+      dateFrom?: string;
+      dateTo?: string;
+      page?: string;
+      pageSize?: string;
+    };
+
+    const data = await getEmployeeCallLog({
+      prisma: fastify.prisma,
+      employeeId,
+      period: q.period ?? "last30",
+      ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
+      ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
+      ...(q.page !== undefined ? { page: parseInt(q.page, 10) } : {}),
+      ...(q.pageSize !== undefined ? { pageSize: parseInt(q.pageSize, 10) } : {}),
+    });
+
+    return reply.status(200).send({ success: true, data });
+  });
+
+  // ── GET /analytics/me/calls — self call log, any authenticated role ──
+  fastify.get("/me/calls", { preHandler: authenticate }, async (request, reply) => {
+    const q = request.query as {
+      period?: Period;
+      dateFrom?: string;
+      dateTo?: string;
+      page?: string;
+      pageSize?: string;
+    };
+
+    const data = await getEmployeeCallLog({
+      prisma: fastify.prisma,
+      employeeId: request.user.id,
+      period: q.period ?? "last30",
+      ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
+      ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
+      ...(q.page !== undefined ? { page: parseInt(q.page, 10) } : {}),
+      ...(q.pageSize !== undefined ? { pageSize: parseInt(q.pageSize, 10) } : {}),
+    });
+
+    return reply.status(200).send({ success: true, data });
+  });
+
+  // ── GET /analytics/employees/:id/interacted-leads — leads behind leadsInteracted ──
+  fastify.get(
+    "/employees/:id/interacted-leads",
+    { preHandler: guard },
+    async (request, reply) => {
+      const { id: employeeId } = request.params as { id: string };
+      const q = request.query as {
+        period?: Period;
+        dateFrom?: string;
+        dateTo?: string;
+        page?: string;
+        pageSize?: string;
+      };
+
+      const data = await getEmployeeInteractedLeads({
+        prisma: fastify.prisma,
+        employeeId,
+        period: q.period ?? "last30",
+        ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
+        ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
+        ...(q.page !== undefined ? { page: parseInt(q.page, 10) } : {}),
+        ...(q.pageSize !== undefined ? { pageSize: parseInt(q.pageSize, 10) } : {}),
+      });
+
+      return reply.status(200).send({ success: true, data });
+    },
+  );
+
+  // ── GET /analytics/me/interacted-leads — self version, any authenticated role ──
+  fastify.get("/me/interacted-leads", { preHandler: authenticate }, async (request, reply) => {
+    const q = request.query as {
+      period?: Period;
+      dateFrom?: string;
+      dateTo?: string;
+      page?: string;
+      pageSize?: string;
+    };
+
+    const data = await getEmployeeInteractedLeads({
+      prisma: fastify.prisma,
+      employeeId: request.user.id,
+      period: q.period ?? "last30",
+      ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
+      ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
+      ...(q.page !== undefined ? { page: parseInt(q.page, 10) } : {}),
+      ...(q.pageSize !== undefined ? { pageSize: parseInt(q.pageSize, 10) } : {}),
+    });
+
+    return reply.status(200).send({ success: true, data });
   });
 
   // ── GET /analytics/pipeline ──
@@ -184,6 +313,119 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
     return reply.status(200).send({ success: true, data });
   });
 
+  // ── GET /analytics/revenue — weighted pipeline forecast ──
+  fastify.get("/revenue", { preHandler: guard }, async (request, reply) => {
+    const q = request.query as { branchId?: string };
+    const branchId = effectiveBranchId(request.user.role, request.user.branchId, q.branchId);
+
+    const cacheKey = buildCacheKey("revenue", { branchId });
+    const data = await getCached(fastify.redis, cacheKey, CACHE_TTL, () =>
+      getRevenueForecast({
+        prisma: fastify.prisma,
+        ...(branchId !== undefined ? { branchId } : {}),
+      }),
+    );
+
+    return reply.status(200).send({ success: true, data });
+  });
+
+  // ── GET /analytics/branches — ADMIN only, company-wide comparison ──
+  fastify.get(
+    "/branches",
+    { preHandler: [authenticate, authorize([Role.ADMIN])] },
+    async (request, reply) => {
+      const q = request.query as { period?: Period };
+      const cacheKey = buildCacheKey("branches", { period: q.period });
+      const data = await getCached(fastify.redis, cacheKey, CACHE_TTL, () =>
+        getBranchComparison({ prisma: fastify.prisma, period: q.period ?? "last30" }),
+      );
+
+      return reply.status(200).send({ success: true, data });
+    },
+  );
+
+  // ── GET /analytics/campaigns — per-campaign revenue/ROI ──
+  fastify.get("/campaigns", { preHandler: guard }, async (request, reply) => {
+    const q = request.query as { branchId?: string };
+    const branchId = effectiveBranchId(request.user.role, request.user.branchId, q.branchId);
+
+    const cacheKey = buildCacheKey("campaigns", { branchId });
+    const data = await getCached(fastify.redis, cacheKey, CACHE_TTL, () =>
+      getCampaignPerformance({
+        prisma: fastify.prisma,
+        ...(branchId !== undefined ? { branchId } : {}),
+      }),
+    );
+
+    return reply.status(200).send({ success: true, data });
+  });
+
+  // ── GET /analytics/workload — SubAdmin/Admin only ──
+  fastify.get("/workload", { preHandler: guard }, async (request, reply) => {
+    const q = request.query as { branchId?: string };
+    const branchId = effectiveBranchId(request.user.role, request.user.branchId, q.branchId);
+
+    const cacheKey = buildCacheKey("workload", { branchId });
+    const data = await getCached(fastify.redis, cacheKey, CACHE_TTL, () =>
+      getWorkloadBalance({
+        prisma: fastify.prisma,
+        ...(branchId !== undefined ? { branchId } : {}),
+      }),
+    );
+
+    return reply.status(200).send({ success: true, data });
+  });
+
+  // ── GET /analytics/clients-at-risk — CLIENT deals gone quiet ──
+  fastify.get("/clients-at-risk", { preHandler: guard }, async (request, reply) => {
+    const q = request.query as { branchId?: string; staleDays?: string };
+    const branchId = effectiveBranchId(request.user.role, request.user.branchId, q.branchId);
+    const staleDays = q.staleDays ? parseInt(q.staleDays, 10) : undefined;
+
+    const cacheKey = buildCacheKey("clients-at-risk", { branchId, staleDays: q.staleDays });
+    const data = await getCached(fastify.redis, cacheKey, CACHE_TTL, () =>
+      getClientsNeedingAttention({
+        prisma: fastify.prisma,
+        ...(branchId !== undefined ? { branchId } : {}),
+        ...(staleDays !== undefined ? { staleDays } : {}),
+      }),
+    );
+
+    return reply.status(200).send({ success: true, data });
+  });
+
+  // ── GET /analytics/leads-at-risk ──
+  // Available to all authenticated roles: employees are auto-scoped to their
+  // own leads (they can't pass assignedToId), managers get the usual
+  // branch-lock via effectiveBranchId() and may filter by any employee.
+  fastify.get("/leads-at-risk", { preHandler: authenticate }, async (request, reply) => {
+    const q = request.query as {
+      branchId?: string;
+      assignedToId?: string;
+      staleDays?: string;
+    };
+    const staleDays = q.staleDays ? parseInt(q.staleDays, 10) : undefined;
+
+    let branchId: string | undefined;
+    let assignedToId: string | undefined;
+
+    if (request.user.role === Role.EMPLOYEE) {
+      assignedToId = request.user.id;
+    } else {
+      branchId = effectiveBranchId(request.user.role, request.user.branchId, q.branchId);
+      assignedToId = q.assignedToId;
+    }
+
+    const data = await getLeadsAtRisk({
+      prisma: fastify.prisma,
+      ...(branchId !== undefined ? { branchId } : {}),
+      ...(assignedToId !== undefined ? { assignedToId } : {}),
+      ...(staleDays !== undefined ? { staleDays } : {}),
+    });
+
+    return reply.status(200).send({ success: true, data });
+  });
+
   // ── GET /analytics/confirmed ──
   fastify.get("/confirmed", { preHandler: guard }, async (request, reply) => {
     const q = request.query as {
@@ -226,6 +468,7 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
         dateTo?: string;
         branchId?: string;
       };
+      const branchId = effectiveBranchId(request.user.role, request.user.branchId, q.branchId);
 
       let csv = "";
       let filename = "";
@@ -236,7 +479,7 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
           period: q.period ?? "last30",
           ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
           ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
-          ...(q.branchId !== undefined ? { branchId: q.branchId } : {}),
+          ...(branchId !== undefined ? { branchId } : {}),
         });
 
         const rows = data.employees.map((e) => ({
@@ -259,7 +502,7 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
           period: q.period ?? "last30",
           ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
           ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
-          ...(q.branchId !== undefined ? { branchId: q.branchId } : {}),
+          ...(branchId !== undefined ? { branchId } : {}),
         });
 
         const rows = data.leads.map((l) => ({
@@ -274,6 +517,39 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
 
         csv = generateCSV(Object.keys(rows[0] ?? {}), rows);
         filename = "client-deals.csv";
+      } else if (type === "pipeline") {
+        const data = await getPipelineAnalysis({
+          prisma: fastify.prisma,
+          ...(branchId !== undefined ? { branchId } : {}),
+        });
+
+        const rows = data.statusBreakdown.map((s) => ({
+          Status: s.status,
+          Count: s.count,
+          "Avg Days in Stage": s.avgDaysInStage ?? "N/A",
+        }));
+
+        csv = generateCSV(["Status", "Count", "Avg Days in Stage"], rows);
+        filename = "pipeline-snapshot.csv";
+      } else if (type === "sources") {
+        const data = await getSourceReport({
+          prisma: fastify.prisma,
+          period: q.period ?? "last30",
+          ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
+          ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
+          ...(branchId !== undefined ? { branchId } : {}),
+        });
+
+        const rows = data.sources.map((s) => ({
+          Source: s.source.name,
+          Leads: s.total,
+          Clients: s.confirmed,
+          Lost: s.lost,
+          "Conversion Rate %": s.conversionRate,
+        }));
+
+        csv = generateCSV(["Source", "Leads", "Clients", "Lost", "Conversion Rate %"], rows);
+        filename = "source-performance.csv";
       } else {
         return reply.status(400).send({
           success: false,
@@ -362,6 +638,7 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
         dateTo?: string;
         branchId?: string;
       };
+      const branchId = effectiveBranchId(request.user.role, request.user.branchId, q.branchId);
 
       void reply.header("Content-Type", "application/pdf");
 
@@ -371,7 +648,7 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
           period: q.period ?? "last30",
           ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
           ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
-          ...(q.branchId !== undefined ? { branchId: q.branchId } : {}),
+          ...(branchId !== undefined ? { branchId } : {}),
         });
 
         void reply.header(
@@ -385,7 +662,7 @@ export async function analyticsRoutes(fastify: FastifyInstance): Promise<void> {
           period: q.period ?? "last30",
           ...(q.dateFrom !== undefined ? { dateFrom: q.dateFrom } : {}),
           ...(q.dateTo !== undefined ? { dateTo: q.dateTo } : {}),
-          ...(q.branchId !== undefined ? { branchId: q.branchId } : {}),
+          ...(branchId !== undefined ? { branchId } : {}),
         });
 
         void reply.header(

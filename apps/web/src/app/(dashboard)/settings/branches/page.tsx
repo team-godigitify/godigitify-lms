@@ -1,14 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 import {
   useBranches,
   useCreateBranch,
   useUpdateBranch,
 } from "@/hooks/useBranches";
-import { useAuthStore } from "@/store/auth";
+import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
@@ -17,8 +16,6 @@ import { Spinner } from "@/components/ui/Spinner";
 import { Role } from "@lms/types";
 
 export default function BranchesSettingsPage() {
-  const { user } = useAuthStore();
-  const router = useRouter();
   const { data: branches, isLoading } = useBranches();
   const createBranch = useCreateBranch();
   const updateBranch = useUpdateBranch();
@@ -38,11 +35,8 @@ export default function BranchesSettingsPage() {
   const [editModal, setEditModal] = useState<Branch | null>(null);
   const [form, setForm] = useState({ name: "", city: "", address: "" });
 
-  useEffect(() => {
-    if (user && user.role !== Role.ADMIN) router.replace("/settings");
-  }, [user, router]);
-
   return (
+    <AuthGuard allowedRoles={[Role.ADMIN]} redirectTo="/settings">
     <div className="max-w-2xl space-y-5">
       <div className="flex items-center justify-between">
         <div>
@@ -208,5 +202,6 @@ export default function BranchesSettingsPage() {
         </div>
       </Modal>
     </div>
+    </AuthGuard>
   );
 }

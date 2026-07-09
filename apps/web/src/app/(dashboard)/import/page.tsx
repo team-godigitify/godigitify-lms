@@ -13,7 +13,7 @@ import {
 import * as XLSX from "xlsx";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { useAuthStore } from "@/store/auth";
+import { AuthGuard } from "@/components/AuthGuard";
 import { useNotifications } from "@/store/notifications";
 import api from "@/lib/api";
 import { extractApiError } from "@/lib/utils";
@@ -194,7 +194,6 @@ function parseExcelFile(file: File): Promise<ParsedRow[]> {
 }
 
 export default function ImportPage() {
-  const { user } = useAuthStore();
   const router = useRouter();
   const { success, error } = useNotifications();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -212,10 +211,6 @@ export default function ImportPage() {
       setSources((data.data as any[]).filter((s: any) => s.isActive).map((s: any) => s.name));
     }).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (user && user.role === Role.EMPLOYEE) router.replace("/dashboard");
-  }, [user, router]);
 
   async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0];
@@ -261,9 +256,8 @@ export default function ImportPage() {
   const validRows = parsedRows.filter((r) => r.phone);
   const invalidRows = parsedRows.filter((r) => !r.phone);
 
-  if (!user || user.role === Role.EMPLOYEE) return null;
-
   return (
+    <AuthGuard allowedRoles={[Role.ADMIN, Role.SUB_ADMIN]}>
     <div className="max-w-4xl space-y-6">
       <div className="flex items-center justify-between">
         <div>
@@ -486,5 +480,6 @@ export default function ImportPage() {
         </div>
       )}
     </div>
+    </AuthGuard>
   );
 }

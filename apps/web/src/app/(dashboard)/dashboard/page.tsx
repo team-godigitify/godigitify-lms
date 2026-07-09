@@ -2,15 +2,23 @@
 
 import { useAuthStore } from "@/store/auth";
 import { AdminDashboard } from "@/components/dashboard/AdminDashboard";
-import { EmployeeDashboard } from "@/components/dashboard/EmployeeDashboard";
+import { BranchDashboard } from "@/components/dashboard/BranchDashboard";
+import { MyDeskDashboard } from "@/components/dashboard/MyDeskDashboard";
 import { Role } from "@lms/types";
 
+// Three genuinely distinct dashboards per role — not one dashboard reused
+// with a filter pre-applied (see docs/analytics-prd.md §2-§5).
 export default function DashboardPage() {
   const { user } = useAuthStore();
 
   if (!user) return null;
 
-  const isManager = user.role === Role.ADMIN || user.role === Role.SUB_ADMIN;
-
-  return isManager ? <AdminDashboard /> : <EmployeeDashboard />;
+  switch (user.role) {
+    case Role.ADMIN:
+      return <AdminDashboard />;
+    case Role.SUB_ADMIN:
+      return <BranchDashboard />;
+    default:
+      return <MyDeskDashboard />;
+  }
 }

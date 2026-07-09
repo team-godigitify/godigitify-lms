@@ -11,6 +11,7 @@ import {
 import { validateBody } from "../../middleware/validate";
 import { dispatchInteractionNotification } from "../../services/notifications";
 import { invalidateActivityCache } from "../../services/cache";
+import { recomputeLeadScore } from "../../services/leadScoring";
 
 const EDIT_WINDOW_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -246,6 +247,7 @@ export async function interactionRoutes(
         note: finalNote,
       });
 
+      await recomputeLeadScore(fastify.prisma, leadId);
       await invalidateActivityCache(fastify.redis, branchId, userId);
 
       return reply.status(201).send({ success: true, data: interaction });

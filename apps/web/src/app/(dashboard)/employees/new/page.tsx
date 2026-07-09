@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { useCreateUser } from "@/hooks/useUsers";
 import { useBranches } from "@/hooks/useBranches";
 import { useAuthStore } from "@/store/auth";
+import { AuthGuard } from "@/components/AuthGuard";
 import { Role } from "@lms/types";
 
 export default function NewUserPage() {
@@ -27,10 +28,6 @@ export default function NewUserPage() {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const selectedBranchId = form.branchId || user?.branchId || "";
-
-  useEffect(() => {
-    if (user && user.role === Role.EMPLOYEE) router.replace("/dashboard");
-  }, [user, router]);
 
   function validate() {
     const errs: Record<string, string> = {};
@@ -69,6 +66,7 @@ export default function NewUserPage() {
       : ["EMPLOYEE"];
 
   return (
+    <AuthGuard allowedRoles={[Role.ADMIN, Role.SUB_ADMIN]}>
     <div className="max-w-lg mx-auto space-y-6">
       <button
         onClick={() => router.back()}
@@ -214,5 +212,6 @@ export default function NewUserPage() {
         </div>
       </form>
     </div>
+    </AuthGuard>
   );
 }

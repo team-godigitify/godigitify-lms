@@ -123,10 +123,10 @@ export function LeadCards({
               </div>
 
               {/* Quick actions */}
-              <div className="flex items-center gap-1 pt-1 border-t border-surface-100">
+              <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-surface-100">
                 <a
                   href={`tel:${lead.phone}`}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-primary hover:bg-primary-50"
+                  className="flex-1 min-w-17 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-primary hover:bg-primary-50"
                 >
                   <Phone size={13} /> Call
                 </a>
@@ -134,7 +134,7 @@ export function LeadCards({
                   href={`https://wa.me/91${lead.phone.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-[#25D366] hover:bg-green-50"
+                  className="flex-1 min-w-17 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-[#25D366] hover:bg-green-50"
                   title="WhatsApp"
                 >
                   <svg
@@ -149,14 +149,14 @@ export function LeadCards({
                 </a>
                 <button
                   onClick={() => setModal({ type: "note", lead })}
-                  className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-primary hover:bg-primary-50"
+                  className="flex-1 min-w-17 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-primary hover:bg-primary-50"
                 >
                   <MessageSquare size={13} /> Note
                 </button>
                 {isManager && (
                   <button
                     onClick={() => setModal({ type: "assign", lead })}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-primary hover:bg-primary-50"
+                    className="flex-1 min-w-17 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-primary hover:bg-primary-50"
                   >
                     <UserCheck size={13} /> Assign
                   </button>
@@ -166,7 +166,7 @@ export function LeadCards({
                     onClick={() =>
                       void markDone.mutateAsync({ leadId: lead.id })
                     }
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-green-600 hover:bg-green-50"
+                    className="flex-1 min-w-17 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-green-600 hover:bg-green-50"
                     title="Mark follow-up done"
                   >
                     <CheckCircle size={13} /> Done

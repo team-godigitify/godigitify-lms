@@ -56,6 +56,7 @@ export default function NewLeadPage() {
     city: "",
     sourceId: "",
     sourceOther: "",
+    campaignId: "",
     remarks: "",
     nextFollowUpAt: "",
   });
@@ -107,6 +108,17 @@ export default function NewLeadPage() {
     },
   });
 
+  const { data: campaigns } = useQuery({
+    queryKey: ["campaigns"],
+    queryFn: async () => {
+      const { data } = await api.get("/campaigns");
+      return data.data.campaigns as Array<{ id: string; name: string; sourceId: string; isActive: boolean }>;
+    },
+  });
+  const campaignsForSource = (campaigns ?? []).filter(
+    (c) => c.sourceId === form.sourceId && c.isActive,
+  );
+
   function set(field: string, value: unknown) {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => { const n = { ...prev }; delete n[field]; return n; });
@@ -148,6 +160,7 @@ export default function NewLeadPage() {
       if (form.city) payload["city"] = form.city;
       if (form.sourceId) payload["sourceId"] = form.sourceId;
       if (form.sourceOther) payload["sourceOther"] = form.sourceOther;
+      if (form.campaignId) payload["campaignId"] = form.campaignId;
       if (form.remarks) payload["remarks"] = form.remarks;
       if (form.nextFollowUpAt) payload["nextFollowUpAt"] = new Date(form.nextFollowUpAt).toISOString();
       if (revivalConfirm) payload["confirmRevival"] = true;
@@ -378,7 +391,10 @@ export default function NewLeadPage() {
                 </label>
                 <select
                   value={form.sourceId}
-                  onChange={(e) => set("sourceId", e.target.value)}
+                  onChange={(e) => {
+                    set("sourceId", e.target.value);
+                    set("campaignId", "");
+                  }}
                   aria-label="Lead source"
                   title="Lead source"
                   className="w-full px-3 py-2.5 rounded-lg border border-surface-200 text-sm outline-none focus:border-primary bg-white"
@@ -396,6 +412,26 @@ export default function NewLeadPage() {
                   value={form.sourceOther}
                   onChange={(e) => set("sourceOther", e.target.value)}
                 />
+              )}
+              {campaignsForSource.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Campaign (optional)
+                  </label>
+                  <select
+                    value={form.campaignId}
+                    onChange={(e) => set("campaignId", e.target.value)}
+                    aria-label="Campaign"
+                    title="Campaign"
+                    className="w-full px-3 py-2.5 rounded-lg border border-surface-200 text-sm outline-none focus:border-primary bg-white"
+                  >
+                    <option value="">No specific campaign</option>
+                    {campaignsForSource.map((c) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">Ties this lead to an ad push for ROI reporting</p>
+                </div>
               )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">

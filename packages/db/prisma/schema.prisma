@@ -55,6 +55,18 @@ enum InteractionType {
   STATUS_CHANGED
 }
 
+enum TargetScope {
+  COMPANY
+  BRANCH
+  EMPLOYEE
+}
+
+enum TargetMetric {
+  REVENUE
+  LEADS
+  CONVERSIONS
+}
+
 // ─────────────────────────────────────────
 // BRANCH
 // Physical office location.
@@ -105,6 +117,9 @@ model User {
   assignmentsMade  AssignmentHistory[] @relation("AssignedBy")
   auditLogs        AuditLog[]
   clientDeals      ClientDeal[]
+  targets          Target[]
+  notifications    Notification[]
+  savedViews       SavedView[]
 
   @@index([email])
   @@index([branchId])
@@ -124,7 +139,32 @@ model LeadSourceType {
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
 
+  leads     Lead[]
+  campaigns Campaign[]
+}
+
+// ─────────────────────────────────────────
+// CAMPAIGN
+// A specific ad/marketing push within a LeadSourceType (e.g. a named Meta
+// campaign). Optional spend enables ROI reporting once revenue is known.
+// ─────────────────────────────────────────
+
+model Campaign {
+  id             String    @id @default(cuid())
+  name           String
+  sourceId       String
+  source         LeadSourceType @relation(fields: [sourceId], references: [id])
+  metaCampaignId String?   @unique
+  spend          Decimal?
+  startDate      DateTime
+  endDate        DateTime?
+  isActive       Boolean   @default(true)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
   leads Lead[]
+
+  @@index([sourceId])
 }
 
 // ─────────────────────────────────────────
@@ -162,10 +202,14 @@ model Lead {
   sourceId    String?
   source      LeadSourceType? @relation(fields: [sourceId], references: [id])
   sourceOther String?
+  campaignId  String?
+  campaign    Campaign?       @relation(fields: [campaignId], references: [id])
 
   // Pipeline
-  status  LeadStatus @default(NEW)
-  remarks String?
+  status    LeadStatus @default(NEW)
+  remarks   String?
+  tags      String[]   @default([])
+  leadScore Int?
 
   // Follow-up
   nextFollowUpAt DateTime?
@@ -225,6 +269,8 @@ model Lead {
   @@index([leadPriority])
   @@index([waContactId])
   @@index([isFromWhatsApp])
+  @@index([campaignId])
+  @@index([leadScore])
 }
 
 // ─────────────────────────────────────────
@@ -242,6 +288,7 @@ model ClientDeal {
   dealValue         Decimal
   servicesSold      String[]
   contractStartDate DateTime
+  contractEndDate   DateTime?
   quotationLink     String
   closedById        String
   closedBy          User     @relation(fields: [closedById], references: [id])
@@ -425,4 +472,65 @@ model PasswordResetToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
+}
+
+// ─────────────────────────────────────────
+// TARGET
+// A goal for a metric over a period, scoped to the whole company, one
+// branch, or one employee. scopeId is the branchId/userId; null for COMPANY.
+// ─────────────────────────────────────────
+
+model Target {
+  id          String       @id @default(cuid())
+  scope       TargetScope
+  scopeId     String?
+  metric      TargetMetric
+  period      String
+  value       Decimal
+  createdById String
+  createdBy   User         @relation(fields: [createdById], references: [id])
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@unique([scope, scopeId, metric, period])
+  @@index([scope, scopeId, period])
+}
+
+// ─────────────────────────────────────────
+// NOTIFICATION
+// Persisted, per-user notifications with real read state — replaces the
+// localStorage "last seen" heuristic the bell used to rely on.
+// ─────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  linkUrl   String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────
+// SAVED VIEW
+// Per-user, per-table named filter presets. Also doubles as the storage for
+// report definitions (entity: "report") so we don't need a second model —
+// a report is just a saved filter set plus an optional schedule.
+// ─────────────────────────────────────────
+
+model SavedView {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entity    String
+  name      String
+  filters   Json
+  createdAt DateTime @default(now())
+
+  @@index([userId, entity])
 }

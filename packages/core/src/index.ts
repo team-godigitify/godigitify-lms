@@ -44,6 +44,10 @@ export {
   buildClosedByTag,
 } from "./lead/visibility";
 
+// Lead scoring
+export { computeLeadScore } from "./lead/scoring";
+export type { LeadScoringInput } from "./lead/scoring";
+
 // Import
 export { processImportRows } from "./import/processor";
 export type { ExcelRow } from "./import/processor";

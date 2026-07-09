@@ -24,6 +24,8 @@ export const leadSummarySelect = {
   industry: true,
   leadPriority: true,
   dealSizeEstimate: true,
+  tags: true,
+  leadScore: true,
   nextFollowUpAt: true,
   isDuplicate: true,
   confirmedAt: true,
@@ -31,6 +33,7 @@ export const leadSummarySelect = {
   createdAt: true,
   updatedAt: true,
   source: { select: { id: true, name: true } },
+  campaign: { select: { id: true, name: true } },
   assignedTo: { select: { id: true, name: true, email: true, role: true } },
   createdBy: { select: { id: true, name: true } },
   intelBrief: { select: { id: true, status: true } },
@@ -88,6 +91,11 @@ export function buildLeadWhereClause(params: {
     industry?: string
     leadPriority?: LeadPriority
     isProfileComplete?: boolean
+    tags?: string[]
+    leadScoreMin?: number
+    leadScoreMax?: number
+    allStatuses?: boolean
+    excludeStatuses?: LeadStatus[]
     search?: string
     dateFrom?: string
     dateTo?: string
@@ -110,12 +118,18 @@ export function buildLeadWhereClause(params: {
 
   // ── Status filter ──
   // When search is active: no status restriction.
-  // When no search and no explicit status: hide CLIENT/INTERESTED (own tabs).
+  // An explicit status wins outright. Otherwise an explicit excludeStatuses
+  // list (used by dashboard KPI drill-downs to reconstruct their exact
+  // calculation) wins. Only when none of those apply do we fall back to the
+  // organic-browsing default: hide CLIENT/INTERESTED (they have their own
+  // tabs) — and allStatuses=true bypasses even that default.
   if (filters.search) {
     // global search — no status restriction
   } else if (filters.status) {
     andClauses.push({ status: filters.status })
-  } else {
+  } else if (filters.excludeStatuses && filters.excludeStatuses.length > 0) {
+    andClauses.push({ status: { notIn: filters.excludeStatuses } })
+  } else if (!filters.allStatuses) {
     andClauses.push({ status: { notIn: ['CLIENT', 'INTERESTED'] } })
   }
 
@@ -130,6 +144,15 @@ export function buildLeadWhereClause(params: {
   if (filters.industry)     andClauses.push({ industry: { contains: filters.industry, mode: 'insensitive' } })
   if (filters.leadPriority) andClauses.push({ leadPriority: filters.leadPriority })
   if (filters.isProfileComplete !== undefined) andClauses.push({ isProfileComplete: filters.isProfileComplete })
+  if (filters.tags && filters.tags.length > 0) andClauses.push({ tags: { hasSome: filters.tags } })
+  if (filters.leadScoreMin !== undefined || filters.leadScoreMax !== undefined) {
+    andClauses.push({
+      leadScore: {
+        ...(filters.leadScoreMin !== undefined ? { gte: filters.leadScoreMin } : {}),
+        ...(filters.leadScoreMax !== undefined ? { lte: filters.leadScoreMax } : {}),
+      },
+    })
+  }
 
   if (filters.overdue) {
     andClauses.push({ nextFollowUpAt: { lte: new Date() } })

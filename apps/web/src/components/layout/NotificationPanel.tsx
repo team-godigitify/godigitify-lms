@@ -39,7 +39,7 @@ export function NotificationPanel() {
           {/* Backdrop */}
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
 
-          <div className="absolute right-0 top-10 z-50 w-80 bg-white border border-surface-200 rounded-2xl shadow-xl overflow-hidden">
+          <div className="absolute right-0 top-10 z-50 w-80 max-w-[calc(100vw-2rem)] bg-white border border-surface-200 rounded-2xl shadow-xl overflow-hidden">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-surface-200">
               <div className="flex items-center gap-2">

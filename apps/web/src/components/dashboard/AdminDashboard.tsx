@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Users,
   CheckCircle2,
@@ -16,12 +15,16 @@ import { EmployeePerformanceTable } from "./EmployeePerformanceTable";
 import { FollowUpsDueToday } from "./FollowUpsDueToday";
 import { LeadSourcesChart } from "./LeadSourcesChart";
 import { TrendChart } from "./TrendChart";
-import { PeriodSelector } from "./PeriodSelector";
+import { GlobalFilterBar } from "./GlobalFilterBar";
 import { Leaderboard } from "./Leaderboard";
 import { ClientDealsReport } from "./ClientDealsReport";
 import { useDashboardOverview } from "@/hooks/useDashboard";
 import { useUnassignedLeads } from "@/hooks/useLeads";
-import type { Period } from "@/hooks/useDashboard";
+import {
+  AnalyticsFilterProvider,
+  useAnalyticsFilters,
+} from "@/context/AnalyticsFilterContext";
+import { periodToDateRange } from "@/lib/period";
 
 // Minimal summary shape returned by the dashboard hook — keep in-file to avoid
 // importing broad types and to remove usage of `any`.
@@ -34,21 +37,26 @@ type DashboardSummary = {
   conversionRate?: number;
 };
 
-export function AdminDashboard() {
-  const [period, setPeriod] = useState<Period>("last30");
-  const { data, isLoading } = useDashboardOverview(period);
+function AdminDashboardContent() {
+  const { period, branchId } = useAnalyticsFilters();
+  const { data, isLoading } = useDashboardOverview(period, branchId);
   const { data: unassignedData, isLoading: unassignedLoading } =
-    useUnassignedLeads();
+    useUnassignedLeads(branchId);
   // data may be typed as an empty object by the hook; narrow it to a local shape for summary access
   const summary = (data as { summary?: DashboardSummary } | undefined)?.summary;
 
+  // Every href below reconstructs the exact filter its card's count used —
+  // "allStatuses"/"excludeStatus" bypass the leads list's own default view
+  // (which hides CLIENT/INTERESTED for organic browsing) so the drill-down
+  // total always matches the number on the card (PRD §19).
+  const { dateFrom, dateTo } = periodToDateRange(period);
+  const branchParam = branchId ? `&branchId=${branchId}` : "";
+  const periodParams = dateFrom ? `&dateFrom=${dateFrom}&dateTo=${dateTo}` : "";
+  const todayStr = new Date().toISOString().slice(0, 10);
+
   return (
     <div className="space-y-6">
-      {/* Period selector for stat cards */}
-      <div className="flex items-center justify-between">
-        <div />
-        <PeriodSelector value={period} onChange={setPeriod} />
-      </div>
+      <GlobalFilterBar />
 
       {/* Stat cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
@@ -59,7 +67,7 @@ export function AdminDashboard() {
           icon={<Users size={16} className="text-red-600" />}
           colorVariant="red"
           loading={isLoading}
-          href="/leads"
+          href={`/leads?allStatuses=true${periodParams}${branchParam}`}
         />
         <StatCard
           title="New Today"
@@ -68,7 +76,7 @@ export function AdminDashboard() {
           icon={<CheckCircle2 size={16} className="text-green-600" />}
           colorVariant="green"
           loading={isLoading}
-          href="/leads?status=NEW"
+          href={`/leads?allStatuses=true&dateFrom=${todayStr}&dateTo=${todayStr}${branchParam}`}
         />
         <StatCard
           title="Pending Follow-ups"
@@ -77,7 +85,7 @@ export function AdminDashboard() {
           icon={<AlertTriangle size={16} className="text-amber-600" />}
           colorVariant="yellow"
           loading={isLoading}
-          href="/leads?overdue=true"
+          href={`/leads?overdue=true${branchParam}`}
         />
         <StatCard
           title="Interested Leads"
@@ -86,16 +94,16 @@ export function AdminDashboard() {
           icon={<Star size={16} className="text-blue-600" />}
           colorVariant="blue"
           loading={isLoading}
-          href="/leads?status=NEGOTIATING"
+          href={`/leads?status=INTERESTED${branchParam}`}
         />
         <StatCard
-          title="Leads This Month"
+          title="Active Leads"
           value={summary?.totalActiveLeads ?? 0}
           subtitle="active"
           icon={<TrendingUp size={16} className="text-indigo-600" />}
           colorVariant="indigo"
           loading={isLoading}
-          href="/leads"
+          href={`/leads?excludeStatus=CLIENT,DUPLICATE,LOST${branchParam}`}
         />
         <StatCard
           title="Conversion Rate"
@@ -104,7 +112,7 @@ export function AdminDashboard() {
           icon={<CheckCircle2 size={16} className="text-green-600" />}
           colorVariant="green"
           loading={isLoading}
-          href="/leads?status=NEGOTIATING"
+          href={`/leads?status=CLIENT${branchParam}`}
         />
         <StatCard
           title="Unassigned Leads"
@@ -113,7 +121,7 @@ export function AdminDashboard() {
           icon={<UserX size={16} className="text-orange-600" />}
           colorVariant="orange"
           loading={unassignedLoading}
-          href="/leads?assignedToId=unassigned"
+          href={`/leads?assignedToId=unassigned&excludeStatus=CLIENT,DUPLICATE,LOST${branchParam}`}
         />
       </div>
 
@@ -145,5 +153,13 @@ export function AdminDashboard() {
         <ClientDealsReport />
       </div>
     </div>
+  );
+}
+
+export function AdminDashboard() {
+  return (
+    <AnalyticsFilterProvider>
+      <AdminDashboardContent />
+    </AnalyticsFilterProvider>
   );
 }

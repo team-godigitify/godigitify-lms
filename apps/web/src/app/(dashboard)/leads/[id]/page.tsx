@@ -16,6 +16,13 @@ import { LeadPriority, LeadStatus, Role } from "@lms/types";
 import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
 
+// Some leads (CSV imports, Meta lead forms) store URLs without a protocol
+// (e.g. "business.com"), which browsers treat as a relative path — resolving
+// against the current app origin instead of opening the external site.
+function toAbsoluteUrl(url: string) {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
 const PRIORITY_LABELS: Record<string, string> = {
   [LeadPriority.HIGH]: "High",
   [LeadPriority.MEDIUM]: "Medium",
@@ -82,10 +89,10 @@ export default function LeadDetailPage() {
           Back to leads
         </button>
 
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-xl font-bold text-gray-900">{displayName}</h1>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-xl font-bold text-gray-900 wrap-break-word">{displayName}</h1>
               <StatusBadge status={lead.status} />
               {lead.isDuplicate && (
                 <span className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full border border-slate-200">
@@ -98,8 +105,23 @@ export default function LeadDetailPage() {
                   Profile incomplete
                 </span>
               )}
+              {typeof (lead as any).leadScore === "number" && (
+                <span
+                  title="Lead score — profile completeness, source quality, engagement recency, and priority"
+                  className={cn(
+                    "text-xs font-semibold px-2 py-0.5 rounded-full border",
+                    (lead as any).leadScore >= 70
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : (lead as any).leadScore >= 40
+                        ? "bg-amber-50 text-amber-700 border-amber-200"
+                        : "bg-red-50 text-red-700 border-red-200",
+                  )}
+                >
+                  Score {(lead as any).leadScore}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-4 mt-1">
+            <div className="flex flex-wrap items-center gap-4 mt-1">
               <span className="flex items-center gap-1 text-xs text-gray-400">
                 <User size={11} />
                 Added by {lead.createdBy.name}
@@ -109,6 +131,18 @@ export default function LeadDetailPage() {
                 {dayjs(lead.createdAt).format("D MMM YYYY")}
               </span>
             </div>
+            {Array.isArray((lead as any).tags) && (lead as any).tags.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {(lead as any).tags.map((tag: string) => (
+                  <span
+                    key={tag}
+                    className="text-[11px] bg-primary-50 text-primary px-2 py-0.5 rounded-full"
+                  >
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           <Link
@@ -132,7 +166,7 @@ export default function LeadDetailPage() {
               <div className="grid grid-cols-1 gap-3">
                 {(lead as any).instagramUrl ? (
                   <a
-                    href={(lead as any).instagramUrl}
+                    href={toAbsoluteUrl((lead as any).instagramUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm text-pink-600 hover:underline"
@@ -149,7 +183,7 @@ export default function LeadDetailPage() {
                 )}
                 {(lead as any).websiteUrl ? (
                   <a
-                    href={(lead as any).websiteUrl}
+                    href={toAbsoluteUrl((lead as any).websiteUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 text-sm text-blue-600 hover:underline"

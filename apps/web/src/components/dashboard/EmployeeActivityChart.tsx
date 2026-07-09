@@ -1,9 +1,8 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import type { ApexOptions } from "apexcharts";
-
-const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import { Chart } from "@/components/charts/ChartCard";
+import { CHART_COLORS } from "@/config/chartTheme";
 
 type DayActivity = {
   date: string;
@@ -31,7 +30,7 @@ export function EmployeeActivityChart({ data }: { data: DayActivity[] | undefine
   const options: ApexOptions = {
     chart: { type: "bar", toolbar: { show: false }, sparkline: { enabled: false }, animations: { enabled: false } },
     plotOptions: { bar: { columnWidth: "55%", borderRadius: 3 } },
-    colors: ["#6366f1", "#10b981"],
+    colors: [CHART_COLORS.primaryLight, CHART_COLORS.accentGreen],
     xaxis: {
       categories: labels,
       labels: { style: { fontSize: "10px", colors: "#9ca3af" } },
@@ -39,7 +38,7 @@ export function EmployeeActivityChart({ data }: { data: DayActivity[] | undefine
       axisTicks: { show: false },
     },
     yaxis: { labels: { style: { fontSize: "10px", colors: "#9ca3af" } }, min: 0 },
-    grid: { borderColor: "#f1f5f9", strokeDashArray: 4, xaxis: { lines: { show: false } } },
+    grid: { borderColor: CHART_COLORS.grid, strokeDashArray: 4, xaxis: { lines: { show: false } } },
     legend: {
       show: true,
       fontSize: "11px",
