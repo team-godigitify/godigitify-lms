@@ -17,7 +17,7 @@ import { QuickAssignModal } from "./QuickAssignModal";
 import { useAuthStore } from "@/store/auth";
 import { canAssignLead } from "@lms/auth";
 import { Role, type Lead } from "@lms/types";
-import { useUpdateLead } from "@/hooks/useLeads";
+import { useUpdateLead } from "@/hooks/useLeadDetail";
 import { cn } from "@/lib/utils";
 
 dayjs.extend(relativeTime);
@@ -50,7 +50,16 @@ function FollowUpCard({ lead }: { lead: Lead }) {
   }
 
   async function applyPreset(days: number) {
-    const date = dayjs().add(days, "day").hour(10).minute(0).second(0);
+    const currentTime = value
+      ? dayjs(value)
+      : lead.nextFollowUpAt
+        ? dayjs(lead.nextFollowUpAt)
+        : dayjs().hour(10).minute(0);
+    const date = dayjs()
+      .add(days, "day")
+      .hour(currentTime.hour())
+      .minute(currentTime.minute())
+      .second(0);
     await updateLead.mutateAsync({ nextFollowUpAt: date.toISOString() });
     setEditing(false);
   }
