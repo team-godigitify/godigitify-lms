@@ -1,4 +1,4 @@
-// @lms/types - shared TypeScript types for Godigitify LMS
+// @lms/types - shared TypeScript types for Defynn LMS
 
 // Enums
 export * from "./enums";

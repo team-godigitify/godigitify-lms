@@ -1,5 +1,5 @@
 {
-  "name": "godigitify-crm",
+  "name": "defynn-crm",
   "private": true,
   "scripts": {
     "build": "turbo run build",

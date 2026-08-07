@@ -97,7 +97,7 @@ export default function NewUserPage() {
           label="Work Email"
           type="email"
           required
-          placeholder="employee@godigitify.com"
+          placeholder="employee@defynn.in"
           value={form.email}
           onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
           error={errors["email"]}

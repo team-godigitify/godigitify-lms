@@ -135,16 +135,19 @@ export function Sidebar({ onClose }: Props) {
             !isExpanded ? "w-10 h-10" : "w-50 h-50",
           )}
         >
-          {/* logo.png is a wide icon+wordmark lockup (~4.1:1) — fitting the
-              whole thing into a 40x40 collapsed box via object-contain
-              shrinks it down to a ~10px-tall illegible strip. When
-              collapsed, scale by height instead and clip to the icon mark
-              on the left rather than squashing the wordmark in with it. */}
+          {/* logo.png is a wide wordmark (~3.5:1) — fitting the whole thing
+              into a 40x40 collapsed box via object-contain shrinks it down
+              to a ~11px-tall illegible strip. When collapsed, scale by
+              height instead and clip to the leading glyphs rather than
+              squashing the whole wordmark in.
+              NOTE: the wordmark has no standalone icon mark, so the
+              collapsed rail shows a truncated word. A square monogram
+              asset would serve this slot (and the favicon) better. */}
           <Image
             src="/logo.png"
-            alt="Godigitify"
-            width={1414}
-            height={342}
+            alt="Defynn"
+            width={2044}
+            height={586}
             className={cn(
               "object-contain object-left",
               isExpanded

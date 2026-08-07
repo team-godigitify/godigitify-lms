@@ -1,46 +1,75 @@
 @import "tailwindcss";
 
 @theme {
-  /* Brand colors — Godigitify purple */
-  --color-primary: #47216b;
-  --color-primary-50: #f6f2fb;
-  --color-primary-100: #ede5f7;
-  --color-primary-200: #d9cbef;
-  --color-primary-300: #bba1e3;
-  --color-primary-400: #9971d4;
-  --color-primary-500: #7d4cc2;
-  --color-primary-600: #6835ad;
-  --color-primary-700: #47216b;
-  --color-primary-800: #3b1c5a;
-  --color-primary-900: #2e154a;
-  --color-primary-950: #1c0c2e;
+  /* ── Brand palette ──────────────────────────────────────────────
+     Three source colors, taken from the defynn logo lockup:
+       #181925  ink      — the wordmark; primary actions + body text
+       #9e99ff  brand    — the periwinkle dot; accents, fills, rings
+       #fafaf8  paper    — the page background
+
+     `primary` is the ink, not the periwinkle. The codebase pairs
+     `bg-primary` with `text-white` (22x) and puts `text-primary` on
+     light surfaces (100+x); #9e99ff only reaches 2.4:1 on paper, so
+     using it as the base token would break legibility everywhere.
+     The periwinkle lives at step 400 and as `--color-brand`.
+
+     Never use `brand`/`primary-400` and lighter for text on a light
+     surface — they are fill-and-accent colors. For purple text on
+     paper start at `primary-600` (5.7:1).                          */
+  --color-primary: #181925;
+  --color-primary-50: #f3f2ff;
+  --color-primary-100: #e4e3ff;
+  --color-primary-200: #cac7ff;
+  --color-primary-300: #b4b0ff;
+  --color-primary-400: #9e99ff; /* brand periwinkle, exact */
+  --color-primary-500: #827fe1;
+  --color-primary-600: #5a58bb; /* lightest step safe for text (5.7:1) */
+  --color-primary-700: #424285;
+  --color-primary-800: #2b2c43;
+  --color-primary-900: #1c1c29;
+  --color-primary-950: #0e0f15;
   --color-primary-foreground: #ffffff;
 
-  /* Surface grays */
-  --color-surface: #ffffff;
-  --color-surface-50: #f8fafc;
-  --color-surface-100: #f1f5f9;
-  --color-surface-200: #e2e8f0;
-  --color-surface-300: #cbd5e1;
+  /* The base is already near-black, so `hover:bg-primary-800` and
+     `active:bg-primary-900` lift toward the brand hue instead of
+     darkening — a darker step would be invisible against #181925. */
 
-  /* Shadcn/ui semantic tokens */
-  --color-background: hsl(0 0% 100%);
-  --color-foreground: hsl(222.2 84% 4.9%);
-  --color-card: hsl(0 0% 100%);
-  --color-card-foreground: hsl(222.2 84% 4.9%);
-  --color-popover: hsl(0 0% 100%);
-  --color-popover-foreground: hsl(222.2 84% 4.9%);
-  --color-secondary: hsl(210 40% 96.1%);
-  --color-secondary-foreground: hsl(222.2 47.4% 11.2%);
-  --color-muted: hsl(210 40% 96.1%);
-  --color-muted-foreground: hsl(215.4 16.3% 46.9%);
-  --color-accent: hsl(210 40% 96.1%);
-  --color-accent-foreground: hsl(222.2 47.4% 11.2%);
+  /* Brand accent — the periwinkle on its own, for focus rings,
+     highlights and decorative fills. `bg-brand` needs dark text:
+     white on it is 2.5:1, #181925 on it is 7.0:1.                  */
+  --color-brand: #9e99ff;
+  --color-brand-soft: #e4e3ff;
+  --color-brand-strong: #5a58bb;
+  --color-brand-foreground: #181925;
+
+  /* Surface neutrals — warmed to sit under #fafaf8 paper rather
+     than the old cool slate grays. */
+  --color-surface: #ffffff;
+  --color-surface-50: #fafaf8;
+  --color-surface-100: #f2f2ee;
+  --color-surface-200: #e6e6e0;
+  --color-surface-300: #cfcfc7;
+
+  /* Shadcn/ui semantic tokens.
+     `accent` here is shadcn's muted hover surface, NOT the brand
+     accent — it stays neutral. Use `brand` for the periwinkle.     */
+  --color-background: #fafaf8;
+  --color-foreground: #181925;
+  --color-card: #ffffff;
+  --color-card-foreground: #181925;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #181925;
+  --color-secondary: #f2f2ee;
+  --color-secondary-foreground: #181925;
+  --color-muted: #f2f2ee;
+  --color-muted-foreground: #6b6b7a;
+  --color-accent: #f2f2ee;
+  --color-accent-foreground: #181925;
   --color-destructive: hsl(0 84.2% 60.2%);
   --color-destructive-foreground: hsl(210 40% 98%);
-  --color-border: hsl(214.3 31.8% 91.4%);
-  --color-input: hsl(214.3 31.8% 91.4%);
-  --color-ring: hsl(277 52% 28%);
+  --color-border: #e6e6e0;
+  --color-input: #e6e6e0;
+  --color-ring: #9e99ff;
 
   /* Border radius */
   --radius-sm: 0.25rem;

@@ -78,7 +78,7 @@ export type ImportRowError = {
 // Follow-up check result
 export type OverdueFollowUp = {
   leadId: string
-  leadName: string | null          // name is optional on Godigitify leads
+  leadName: string | null          // name is optional on Defynn leads
   phone: string
   assignedToId: string | null
   assignedToEmail: string | null

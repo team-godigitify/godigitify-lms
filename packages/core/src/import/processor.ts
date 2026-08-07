@@ -9,7 +9,7 @@ import type {
 // Raw row from Excel/CSV — all strings, all optional except rowIndex
 export type ExcelRow = {
   rowIndex: number;
-  // Godigitify field set
+  // Defynn field set
   name?: string;
   phone?: string;
   altPhone?: string;

@@ -150,9 +150,9 @@ export default function LoginPage() {
           <div className="bg-white rounded-2xl p-4 mb-8 shadow-xl">
             <Image
               src="/logo.png"
-              alt="Future Education"
+              alt="Defynn"
               width={200}
-              height={80}
+              height={57}
               className="object-contain"
               priority
             />
@@ -190,9 +190,9 @@ export default function LoginPage() {
             <div className="bg-white rounded-2xl p-3">
               <Image
                 src="/logo.png"
-                alt="Future Education"
+                alt="Defynn"
                 width={140}
-                height={56}
+                height={40}
                 className="object-contain"
               />
             </div>

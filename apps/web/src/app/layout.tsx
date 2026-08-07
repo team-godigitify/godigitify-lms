@@ -9,28 +9,28 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Godigitify CRM",
+  title: "Defynn CRM",
   description:
-    "Godigitify's CRM — track, manage, and convert digital marketing leads efficiently across all your campaigns and channels.",
+    "Defynn's CRM — track, manage, and convert digital marketing leads efficiently across all your campaigns and channels.",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
     apple: "/logo.png",
   },
   openGraph: {
-    title: "Godigitify — Lead Management System",
+    title: "Defynn — Lead Management System",
     description:
-      "Godigitify's Lead Management System — track, manage, and convert digital marketing leads efficiently across all your campaigns and channels.",
+      "Defynn's Lead Management System — track, manage, and convert digital marketing leads efficiently across all your campaigns and channels.",
     type: "website",
     images: [
-      { url: "/logo.png", width: 512, height: 512, alt: "Godigitify Logo" },
+      { url: "/logo.png", width: 2044, height: 586, alt: "Defynn Logo" },
     ],
   },
   twitter: {
     card: "summary",
-    title: "Godigitify — Lead Management System",
+    title: "Defynn — Lead Management System",
     description:
-      "Godigitify's Lead Management System — track, manage, and convert digital marketing leads efficiently.",
+      "Defynn's Lead Management System — track, manage, and convert digital marketing leads efficiently.",
     images: ["/logo.png"],
   },
 };

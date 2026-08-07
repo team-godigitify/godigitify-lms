@@ -2,7 +2,7 @@ import type { OverdueFollowUp } from "../types";
 
 type LeadWithFollowUp = {
   id: string;
-  leadName: string | null;  // name is optional on Godigitify leads
+  leadName: string | null;  // name is optional on Defynn leads
   phone: string;
   assignedToId: string | null;
   assignedToEmail: string | null;

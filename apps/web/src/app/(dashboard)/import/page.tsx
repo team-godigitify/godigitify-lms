@@ -268,7 +268,7 @@ export default function ImportPage() {
         </div>
         <a
           href={templateHref}
-          download="godigitify-lead-import-template.xlsx"
+          download="defynn-lead-import-template.xlsx"
           className="flex items-center gap-2 px-4 py-2 rounded-lg border border-surface-200 text-sm font-medium text-gray-600 hover:border-primary hover:text-primary transition-colors"
         >
           <Download size={14} />

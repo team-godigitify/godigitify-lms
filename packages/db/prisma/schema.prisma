@@ -179,7 +179,7 @@ model Campaign {
 model Lead {
   id String @id @default(cuid())
 
-  // Identity — name optional for Godigitify (prospects may be businesses)
+  // Identity — name optional for Defynn (prospects may be businesses)
   name     String?
   phone    String
   altPhone String?
