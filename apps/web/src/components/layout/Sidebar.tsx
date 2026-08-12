@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import Image from "next/image";
 import {
   LayoutDashboard,
   Users,
@@ -122,42 +121,25 @@ export function Sidebar({ onClose }: Props) {
         isMobile ? "w-72" : collapsed ? "w-16" : "w-60",
       )}
     >
-      {/* Logo + mobile close button */}
+      {/* Wordmark + mobile close button */}
       <div
         className={cn(
-          "flex border-b border-gray-200 px-4",
+          "flex h-16 border-b border-gray-200 px-4",
           isExpanded ? "items-center gap-3" : "items-center justify-center",
         )}
       >
-        <div
+        {/* Text wordmark — the app ships without a logo image, so the
+            collapsed rail falls back to the initial rather than clipping
+            an image down to an illegible strip. */}
+        <span
           className={cn(
-            "relative rounded-xl overflow-hidden shrink-0",
-            !isExpanded ? "w-10 h-10" : "w-50 h-50",
+            "shrink-0 font-semibold tracking-tight text-primary",
+            isExpanded ? "text-xl" : "text-lg",
           )}
         >
-          {/* logo.png is a wide wordmark (~3.5:1) — fitting the whole thing
-              into a 40x40 collapsed box via object-contain shrinks it down
-              to a ~11px-tall illegible strip. When collapsed, scale by
-              height instead and clip to the leading glyphs rather than
-              squashing the whole wordmark in.
-              NOTE: the wordmark has no standalone icon mark, so the
-              collapsed rail shows a truncated word. A square monogram
-              asset would serve this slot (and the favicon) better. */}
-          <Image
-            src="/logo.png"
-            alt="Defynn"
-            width={2044}
-            height={586}
-            className={cn(
-              "object-contain object-left",
-              isExpanded
-                ? "w-full h-full"
-                : "absolute left-0 top-1/2 -translate-y-1/2 h-10 w-auto max-w-none",
-            )}
-            priority
-          />
-        </div>
-       
+          {isExpanded ? "Defynn" : "D"}
+        </span>
+
         {isMobile && (
           <button
             type="button"

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, AlertTriangle, Lock } from "lucide-react";
 import { isAxiosError } from "axios";
@@ -146,16 +145,11 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          {/* Logo */}
-          <div className="bg-white rounded-2xl p-4 mb-8 shadow-xl">
-            <Image
-              src="/logo.png"
-              alt="Defynn"
-              width={200}
-              height={57}
-              className="object-contain"
-              priority
-            />
+          {/* Wordmark */}
+          <div className="mb-8">
+            <span className="text-4xl font-semibold tracking-tight text-white">
+              Defynn
+            </span>
           </div>
 
           <h2 className="text-3xl font-bold text-white mb-3">
@@ -185,17 +179,11 @@ export default function LoginPage() {
       {/* ── Right: Login Form ── */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white">
         <div className="w-full max-w-sm">
-          {/* Mobile logo */}
+          {/* Mobile wordmark */}
           <div className="lg:hidden flex justify-center mb-8">
-            <div className="bg-white rounded-2xl p-3">
-              <Image
-                src="/logo.png"
-                alt="Defynn"
-                width={140}
-                height={40}
-                className="object-contain"
-              />
-            </div>
+            <span className="text-3xl font-semibold tracking-tight text-primary">
+              Defynn
+            </span>
           </div>
 
           <div className="mb-8">

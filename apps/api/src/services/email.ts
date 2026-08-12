@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 import nodemailer from "nodemailer";
-import fs from "node:fs";
-import path from "node:path";
 import { config } from "../config";
 
 // ─────────────────────────────────────────────────────────────
@@ -29,25 +27,6 @@ const smtpTransporter =
         },
       })
     : null;
-
-// Try several candidate paths so this works both locally (tsx) and on Render
-function loadLogoDataUri(): string | null {
-  const candidates = [
-    path.resolve(process.cwd(), "public/logo.png"),
-    path.resolve(__dirname, "../../public/logo.png"),
-    path.resolve(__dirname, "../public/logo.png"),
-  ];
-  for (const p of candidates) {
-    try {
-      const buf = fs.readFileSync(p);
-      return `data:image/jpeg;base64,${buf.toString("base64")}`;
-    } catch {
-      // try next candidate
-    }
-  }
-  return null;
-}
-const LOGO_DATA_URI = loadLogoDataUri();
 
 /** Escape user-controlled strings before embedding in HTML email bodies. */
 function esc(value: string | null | undefined): string {
@@ -94,9 +73,6 @@ export async function verifyEmailConnection(): Promise<boolean> {
 }
 
 function htmlWrapper(content: string): string {
-  // Prefer a hosted URL (set LOGO_URL in env for production); fall back to base64 for local dev
-  const logoUrl = (config.logoUrl || null) ?? LOGO_DATA_URI;
-
   return `
   <!DOCTYPE html>
   <html>
@@ -105,8 +81,6 @@ function htmlWrapper(content: string): string {
     <style>
       body { font-family: Inter, Arial, sans-serif; background: #f8fafc; margin: 0; padding: 20px; }
       .card { background: white; border-radius: 12px; padding: 32px; max-width: 480px; margin: 0 auto; }
-      .logo-wrap { margin-bottom: 24px; }
-      .logo-img { display: block; width: 160px; height: auto; border: 0; }
       .title { font-size: 20px; font-weight: bold; color: #111827; margin-bottom: 8px; }
       .body { font-size: 14px; color: #374151; line-height: 1.6; }
       .btn { display: inline-block; background: #47216b; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none !important; font-weight: 600; margin: 16px 0; }
@@ -116,7 +90,6 @@ function htmlWrapper(content: string): string {
   </head>
   <body>
     <div class="card">
-      ${logoUrl ? `<div class="logo-wrap"><img class="logo-img" src="${logoUrl}" alt="Godigitify" /></div>` : ""}
       ${content}
       <div class="footer">Godigitify · Banur, Punjab<br>This is an automated email, please do not reply.</div>
     </div>

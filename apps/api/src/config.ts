@@ -74,7 +74,6 @@ export const config = {
   instagramScraperUrl:   optionalEnv("INSTAGRAM_SCRAPER_URL", ""),
   instagramScraperKey:   optionalEnv("INSTAGRAM_SCRAPER_KEY", ""),
   frontendUrl: optionalEnv("FRONTEND_URL", "http://localhost:3000"),
-  logoUrl: optionalEnv("LOGO_URL", ""),
 
   isProd: process.env["NODE_ENV"] === "production",
   isDev: process.env["NODE_ENV"] !== "production",
