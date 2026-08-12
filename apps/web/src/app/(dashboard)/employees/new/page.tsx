@@ -97,7 +97,7 @@ export default function NewUserPage() {
           label="Work Email"
           type="email"
           required
-          placeholder="employee@defynn.in"
+          placeholder="name@company.com"
           value={form.email}
           onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
           error={errors["email"]}

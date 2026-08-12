@@ -57,7 +57,7 @@ export function Header({ onMenuClick }: Props) {
           ? "Lead Detail"
           : pathname.startsWith("/employees/")
             ? "Employee"
-            : "Godigitify");
+            : "CRM");
 
   const roleBadge = user ? ROLE_BADGE[user.role as Role] : null;
 

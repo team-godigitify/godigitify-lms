@@ -145,13 +145,6 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          {/* Wordmark */}
-          <div className="mb-8">
-            <span className="text-4xl font-semibold tracking-tight text-white">
-              Defynn
-            </span>
-          </div>
-
           <h2 className="text-3xl font-bold text-white mb-3">
             Lead Management System
           </h2>
@@ -179,13 +172,6 @@ export default function LoginPage() {
       {/* ── Right: Login Form ── */}
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white">
         <div className="w-full max-w-sm">
-          {/* Mobile wordmark */}
-          <div className="lg:hidden flex justify-center mb-8">
-            <span className="text-3xl font-semibold tracking-tight text-primary">
-              Defynn
-            </span>
-          </div>
-
           <div className="mb-8">
             <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
             <p className="text-sm text-gray-500 mt-1">

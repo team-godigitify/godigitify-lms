@@ -9,21 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Defynn CRM",
+  title: "Lead Management System",
   description:
-    "Defynn's CRM — track, manage, and convert digital marketing leads efficiently across all your campaigns and channels.",
-  openGraph: {
-    title: "Defynn — Lead Management System",
-    description:
-      "Defynn's Lead Management System — track, manage, and convert digital marketing leads efficiently across all your campaigns and channels.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary",
-    title: "Defynn — Lead Management System",
-    description:
-      "Defynn's Lead Management System — track, manage, and convert digital marketing leads efficiently.",
-  },
+    "Track, manage, and convert leads across all your campaigns and channels.",
 };
 
 export default function RootLayout({

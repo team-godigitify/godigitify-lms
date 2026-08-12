@@ -121,25 +121,15 @@ export function Sidebar({ onClose }: Props) {
         isMobile ? "w-72" : collapsed ? "w-16" : "w-60",
       )}
     >
-      {/* Wordmark + mobile close button */}
+      {/* Unbranded header strip. Kept at h-16 with no mark or wordmark so the
+          rail still lines up with the main Header, and so the mobile close
+          button has somewhere to sit. */}
       <div
         className={cn(
           "flex h-16 border-b border-gray-200 px-4",
-          isExpanded ? "items-center gap-3" : "items-center justify-center",
+          isExpanded ? "items-center justify-end gap-3" : "items-center justify-center",
         )}
       >
-        {/* Text wordmark — the app ships without a logo image, so the
-            collapsed rail falls back to the initial rather than clipping
-            an image down to an illegible strip. */}
-        <span
-          className={cn(
-            "shrink-0 font-semibold tracking-tight text-primary",
-            isExpanded ? "text-xl" : "text-lg",
-          )}
-        >
-          {isExpanded ? "Defynn" : "D"}
-        </span>
-
         {isMobile && (
           <button
             type="button"
