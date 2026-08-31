@@ -9,7 +9,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "intel-brief:grant": "tsx prisma/scripts/grant-intel-brief.ts"
   },
   "devDependencies": {
     "@lms/typescript-config": "workspace:^",

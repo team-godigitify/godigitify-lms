@@ -20,7 +20,7 @@ This section is a factual record of what exists in `d:\web_all\godigitify-lms` a
 | `LeadSourceType` | Dynamic source list | `name, isActive` | Only structured "campaign" concept that exists |
 | `Lead` | Core CRM entity | `status (LeadStatus), leadPriority, dealSizeEstimate, sourceId, branchId, assignedToId, nextFollowUpAt, isProfileComplete, metaAdName, metaLeadgenId, waContactId` | 14 indexes — heavily built for filtering |
 | `ClientDeal` | Won-deal record, 1:1 with Lead | `dealValue, servicesSold[], contractStartDate, quotationLink, closedById` | Sole source of revenue data. No `contractEndDate` — no renewal tracking possible today |
-| `IntelBrief` | AI prospect-research doc (Claude) | `status, aiOutput, retryCount` | Real differentiator vs. generic CRMs — underused in analytics today |
+| `IntelBrief` | AI prospect-research doc (Gemini) | `status, aiOutput, retryCount` | Real differentiator vs. generic CRMs — underused in analytics today |
 | `InteractionLog` | Every action on a lead | `type, statusBefore/After, callDurationSecs, isDeleted` | Backbone of nearly all analytics (activity, response time, time-in-stage) |
 | `AssignmentHistory` | Reassignment audit trail | `assignedById, assignedToId (bare string, no FK)` | |
 | `AuditLog` | System-generated changes | `action, oldValue, newValue` | |

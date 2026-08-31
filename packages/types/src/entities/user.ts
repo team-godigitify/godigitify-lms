@@ -7,6 +7,7 @@ export type User = {
   phone: string | null;
   role: Role;
   isActive: boolean;
+  canGenerateIntelBrief: boolean;
   branchId: string;
   createdAt: Date;
   updatedAt: Date;

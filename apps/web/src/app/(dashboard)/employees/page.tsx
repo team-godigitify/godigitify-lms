@@ -11,6 +11,7 @@ import {
   CheckSquare,
   Building2,
   Pencil,
+  Sparkles,
 } from "lucide-react";
 import {
   useUsers,
@@ -93,6 +94,7 @@ export default function EmployeesPage() {
     name: string;
     phone: string;
     role: string;
+    canGenerateIntelBrief: boolean;
   } | null>(null);
   const [editLoading, setEditLoading] = useState(false);
 
@@ -209,6 +211,7 @@ export default function EmployeesPage() {
         name: editModal.name.trim(),
         phone: editModal.phone.trim() || undefined,
         role: editModal.role || undefined,
+        canGenerateIntelBrief: editModal.canGenerateIntelBrief,
       });
       success("Employee updated");
       setEditModal(null);
@@ -431,9 +434,21 @@ export default function EmployeesPage() {
                         </td>
 
                         <td className="px-4 py-3">
-                          {badge && (
-                            <Badge variant={badge.variant}>{badge.label}</Badge>
-                          )}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {badge && (
+                              <Badge variant={badge.variant}>{badge.label}</Badge>
+                            )}
+                            {u.role === Role.EMPLOYEE &&
+                              u.canGenerateIntelBrief && (
+                                <span
+                                  title="Can generate Intel Briefs"
+                                  className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-full bg-primary-50 text-primary border border-primary-100 font-medium"
+                                >
+                                  <Sparkles size={9} />
+                                  Intel
+                                </span>
+                              )}
+                          </div>
                         </td>
 
                         <td className="px-4 py-3 text-sm text-gray-600">
@@ -469,6 +484,8 @@ export default function EmployeesPage() {
                                   name: u.name,
                                   phone: u.phone ?? "",
                                   role: u.role,
+                                  canGenerateIntelBrief:
+                                    u.canGenerateIntelBrief ?? false,
                                 })
                               }
                               className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -827,6 +844,39 @@ export default function EmployeesPage() {
                 </select>
               </div>
             )}
+
+            {/* Intel Brief access — only meaningful for employees; Sub Admins
+                and Admins can always generate regardless of the flag. */}
+            <div className="rounded-lg border border-surface-200 p-3">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={
+                    editModal.role === Role.EMPLOYEE
+                      ? editModal.canGenerateIntelBrief
+                      : true
+                  }
+                  disabled={editModal.role !== Role.EMPLOYEE}
+                  onChange={(e) =>
+                    setEditModal((p) =>
+                      p ? { ...p, canGenerateIntelBrief: e.target.checked } : p,
+                    )
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-surface-300 text-primary focus:ring-primary disabled:opacity-50"
+                />
+                <span>
+                  <span className="flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                    <Sparkles size={13} className="text-primary-600" />
+                    Can generate Intel Briefs
+                  </span>
+                  <span className="block text-xs text-gray-400 mt-0.5">
+                    {editModal.role === Role.EMPLOYEE
+                      ? "Lets this employee run AI Intel Brief generation on leads assigned to them. Each run costs an AI API call."
+                      : "Sub Admins and Admins can always generate Intel Briefs."}
+                  </span>
+                </span>
+              </label>
+            </div>
           </div>
         )}
       </Modal>

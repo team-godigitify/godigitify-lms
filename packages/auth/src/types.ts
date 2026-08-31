@@ -5,6 +5,9 @@ export type AuthUser = {
   id: string
   role: Role
   branchId: string
+  // Per-user grant, read from User.canGenerateIntelBrief. Optional so existing
+  // call sites that only need role/branch checks stay unchanged.
+  canGenerateIntelBrief?: boolean
 }
 
 // Minimum lead info needed to check ownership

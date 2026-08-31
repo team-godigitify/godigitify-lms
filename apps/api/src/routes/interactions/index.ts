@@ -1,7 +1,12 @@
 import type { FastifyInstance } from "fastify";
 import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
-import { canAddInteraction, canEditInteraction, canViewLead } from "@lms/auth";
+import {
+  canAddInteraction,
+  canEditInteraction,
+  isInteractionEditTimeLimited,
+  canViewLead,
+} from "@lms/auth";
 import {
   InteractionType,
   Role,
@@ -256,7 +261,9 @@ export async function interactionRoutes(
 
   // ─────────────────────────────────────────
   // PATCH /interactions/:id
-  // Edit interaction note — admin/sub-admin only
+  // Edit interaction note. The author may edit their own note at any time
+  // (every version is kept in InteractionLogEdit); a manager editing someone
+  // else's note stays inside the 24-hour window.
   // ─────────────────────────────────────────
   fastify.patch(
     "/interactions/:id",
@@ -315,14 +322,29 @@ export async function interactionRoutes(
         });
       }
 
-      // Check 24 hour edit window
+      // 24 hour window applies only when editing SOMEONE ELSE'S note.
+      // Authors can correct their own record indefinitely — the edit trail
+      // below makes every version recoverable, so a late fix stays auditable.
+      const timeLimited = isInteractionEditTimeLimited(
+        {
+          id: userId,
+          role: request.user.role as Role,
+          branchId: request.user.branchId,
+        },
+        {
+          id: interaction.id,
+          userId: interaction.userId,
+          isDeleted: interaction.isDeleted,
+        },
+      );
       const ageMs = Date.now() - interaction.createdAt.getTime();
-      if (ageMs > EDIT_WINDOW_MS) {
+      if (timeLimited && ageMs > EDIT_WINDOW_MS) {
         return reply.status(400).send({
           success: false,
           error: {
             code: "EDIT_WINDOW_EXPIRED",
-            message: "Notes can only be edited within 24 hours of creation",
+            message:
+              "Another user's note can only be edited within 24 hours of creation",
           },
         });
       }

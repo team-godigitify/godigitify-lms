@@ -23,6 +23,13 @@ function optionalEnv(key: string, fallback: string): string {
   return process.env[key] ?? fallback;
 }
 
+// null = omit thinkingConfig entirely and let the model apply its own default.
+function parseThinkingBudget(raw: string): number | null {
+  if (raw.trim().toLowerCase() === "auto") return null;
+  const parsed = parseInt(raw, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+}
+
 export const config = {
   env: optionalEnv("NODE_ENV", "development"),
   port: parseInt(optionalEnv("PORT", "5000"), 10),
@@ -63,9 +70,19 @@ export const config = {
     from: optionalEnv("SMTP_FROM", "Godigitify CRM <noreply@godigitify.com>"),
   },
 
-  // ── Intel Brief — Claude AI (Phase 5) ──
-  // Each call is a single-turn stateless message — no session history accumulated.
-  anthropicApiKey: optionalEnv("ANTHROPIC_API_KEY", ""),
+  // ── Intel Brief — Google AI Studio / Gemini (Phase 5) ──
+  // Each generation is its own stateless conversation — no history is carried
+  // between briefs. Key comes from aistudio.google.com → Get API key.
+  // GEMINI_API_KEY is accepted as an alias because that is the name Google's
+  // own docs and SDK samples use.
+  googleAiApiKey: optionalEnv("GOOGLE_AI_API_KEY", "") || optionalEnv("GEMINI_API_KEY", ""),
+  geminiModel: optionalEnv("GEMINI_MODEL", "gemini-2.5-flash"),
+  // Thinking tokens share the output budget with the function call carrying the
+  // brief, so this is 0 (disabled) by default. Set to `auto` to let the model
+  // decide, or a token count to allow a fixed amount.
+  geminiThinkingBudget: parseThinkingBudget(
+    optionalEnv("GEMINI_THINKING_BUDGET", "0"),
+  ),
 
   // ── Intel Brief — Data Collection APIs (Phase 5) ──
   googlePlacesApiKey:    optionalEnv("GOOGLE_PLACES_API_KEY", ""),

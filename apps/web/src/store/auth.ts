@@ -9,6 +9,9 @@ export type AuthUser = {
   email: string;
   role: Role;
   branchId: string;
+  // Per-user grant that lets an EMPLOYEE generate Intel Briefs on their own
+  // leads. Managers can always generate, flag or not.
+  canGenerateIntelBrief?: boolean;
   branch?: { name: string; city?: string };
 };
 

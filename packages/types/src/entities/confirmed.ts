@@ -23,7 +23,7 @@ export type ClientDeal = {
 // ─────────────────────────────────────────
 // INTEL BRIEF
 // AI-generated prospect intelligence.
-// Generation is an agentic Claude loop that fetches real URLs
+// Generation is an agentic Gemini loop that fetches real URLs
 // before producing the brief — no guessing allowed.
 // ─────────────────────────────────────────
 

@@ -18,10 +18,10 @@ async function main() {
     startDailyReportCron(fastify);
     notificationWorker = startNotificationWorker(fastify.redis as any);
     // Intel Brief worker only starts when API key is configured
-    if (config.anthropicApiKey) {
+    if (config.googleAiApiKey) {
       intelBriefWorker = startIntelBriefWorker(fastify.redis as any, fastify.prisma);
     } else {
-      fastify.log.warn("ANTHROPIC_API_KEY not set — Intel Brief worker disabled");
+      fastify.log.warn("GOOGLE_AI_API_KEY not set — Intel Brief worker disabled");
     }
     // Fire-and-forget — SMTP verify is diagnostic only and must not block startup
     void verifyEmailConnection();

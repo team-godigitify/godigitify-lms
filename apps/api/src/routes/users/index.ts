@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
-import { canCreateUser, canUpdateUser } from "@lms/auth";
+import { canCreateUser, canUpdateUser, canGrantIntelBriefAccess } from "@lms/auth";
 import {
   Role,
   CreateUserSchema,
@@ -64,6 +64,7 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
             phone: true,
             role: true,
             isActive: true,
+            canGenerateIntelBrief: true,
             createdAt: true,
             branch: { select: { id: true, name: true, city: true } },
             // Inline stats via _count
@@ -201,6 +202,7 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
           phone: true,
           role: true,
           isActive: true,
+          canGenerateIntelBrief: true,
           createdAt: true,
           updatedAt: true,
           branch: { select: { id: true, name: true, city: true } },
@@ -265,11 +267,34 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
         });
       }
 
+      // Granting Intel Brief access is a spend-bearing change — same bar as the
+      // rest of user management (ADMIN / SUB_ADMIN), checked explicitly so the
+      // rule is visible at the call site.
+      if (
+        body.canGenerateIntelBrief !== undefined &&
+        !canGrantIntelBriefAccess({
+          id: userId,
+          role: role as Role,
+          branchId: request.user.branchId,
+        })
+      ) {
+        return reply.status(403).send({
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "Only Sub Admin and Admin can change Intel Brief access",
+          },
+        });
+      }
+
       const data: Record<string, unknown> = {};
       if (body.name !== undefined) data.name = body.name;
       if (body.phone !== undefined) data.phone = body.phone;
       if (body.branchId !== undefined) data.branchId = body.branchId;
       if (body.role !== undefined) data.role = body.role;
+      if (body.canGenerateIntelBrief !== undefined) {
+        data.canGenerateIntelBrief = body.canGenerateIntelBrief;
+      }
 
       const updated = await fastify.prisma.user.update({
         where: { id },
@@ -281,6 +306,7 @@ export async function userRoutes(fastify: FastifyInstance): Promise<void> {
           phone: true,
           role: true,
           isActive: true,
+          canGenerateIntelBrief: true,
         },
       });
 

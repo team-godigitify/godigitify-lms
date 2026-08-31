@@ -140,8 +140,14 @@ function InteractionItem({
   const config = TYPE_CONFIG[interaction.type] ?? TYPE_CONFIG["NOTE"]!;
   const Icon = config.icon;
   const isManager = user?.role === Role.ADMIN || user?.role === Role.SUB_ADMIN;
+  const isAuthor = !!user && interaction.user.id === user.id;
+  // Authors edit their own entries with no time limit; managers can also edit
+  // anyone else's, but only within 24 hours of creation (enforced by the API).
+  // STATUS_CHANGED entries are system-generated and never editable.
+  const withinEditWindow =
+    dayjs().diff(dayjs(interaction.createdAt), "hour", true) <= 24;
   const canEdit =
-    isManager &&
+    (isAuthor || (isManager && withinEditWindow)) &&
     interaction.type !== InteractionType.STATUS_CHANGED;
 
   const isDuplicateNote = interaction.note?.startsWith("[DUPLICATE DETECTED]");
@@ -281,15 +287,21 @@ function InteractionItem({
         )}
 
         {showHistory && (
-          <div className="mt-2 space-y-1.5 pl-3 border-l-2 border-surface-200">
+          <div className="mt-2 space-y-2 pl-3 border-l-2 border-surface-200">
             {interaction.editHistory.map((edit) => (
               <div key={edit.id} className="text-xs text-gray-500">
                 <span className="font-medium">{edit.editedBy.name}</span> edited{" "}
-                <span className="text-gray-400">
+                <span
+                  className="text-gray-400"
+                  title={dayjs(edit.editedAt).format("D MMM YYYY, h:mm A")}
+                >
                   {dayjs(edit.editedAt).fromNow()}
                 </span>
                 <div className="mt-1 p-2 bg-surface-50 rounded text-xs text-gray-500 line-through">
-                  {edit.noteBefore}
+                  {edit.noteBefore || <em className="not-italic">(empty)</em>}
+                </div>
+                <div className="mt-1 p-2 bg-surface-50 rounded text-xs text-gray-600">
+                  {edit.noteAfter}
                 </div>
               </div>
             ))}

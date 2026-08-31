@@ -101,6 +101,11 @@ model User {
   role         Role    @default(EMPLOYEE)
   isActive     Boolean @default(true)
 
+  // Per-user grant: lets an EMPLOYEE trigger Intel Brief generation on leads
+  // they own. ADMIN/SUB_ADMIN always can, regardless of this flag.
+  // Each generation costs an AI API call, so it is opt-in per user.
+  canGenerateIntelBrief Boolean @default(false)
+
   branchId String
   branch   Branch @relation(fields: [branchId], references: [id])
 

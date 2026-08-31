@@ -17,6 +17,9 @@ export const UpdateUserSchema = z.object({
   phone:    indianPhone.optional(),
   branchId: z.string().min(1).optional(),
   role:     z.nativeEnum(Role).optional(),
+  // Per-user grant for Intel Brief generation. Only meaningful for EMPLOYEE —
+  // ADMIN/SUB_ADMIN can always generate.
+  canGenerateIntelBrief: z.boolean().optional(),
 })
 
 export const AdminResetPasswordSchema = z.object({

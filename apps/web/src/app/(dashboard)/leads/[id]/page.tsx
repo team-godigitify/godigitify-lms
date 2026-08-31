@@ -71,6 +71,16 @@ export default function LeadDetailPage() {
   const displayName = (lead as any).name ?? lead.phone;
   const canManageDeal =
     user?.role === Role.ADMIN || user?.role === Role.SUB_ADMIN;
+
+  // Intel Brief generation is separate from deal management: managers always
+  // have it, and an employee has it when granted (User.canGenerateIntelBrief)
+  // on a lead they own. The API re-checks this — the UI only hides the button.
+  const ownsLead =
+    !!user &&
+    ((lead as any).assignedTo?.id === user.id ||
+      (lead as any).createdBy?.id === user.id);
+  const canGenerateBrief =
+    canManageDeal || (!!user?.canGenerateIntelBrief && ownsLead);
   const showDealSection =
     canManageDeal &&
     (lead.status === LeadStatus.PROPOSAL_SENT ||
@@ -257,7 +267,7 @@ export default function LeadDetailPage() {
             <IntelBriefPanel
               leadId={id}
               isProfileComplete={!!(lead as any).isProfileComplete}
-              canManage={canManageDeal}
+              canManage={canGenerateBrief}
             />
           </div>
 

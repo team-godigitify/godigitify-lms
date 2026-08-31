@@ -327,6 +327,7 @@ export async function authRoutes(fastify: FastifyInstance): Promise<void> {
           phone: true,
           role: true,
           isActive: true,
+          canGenerateIntelBrief: true,
           branchId: true,
           branch: { select: { name: true, city: true } },
           createdAt: true,

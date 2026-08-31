@@ -15,6 +15,7 @@ export {
 export {
   canAddInteraction,
   canEditInteraction,
+  isInteractionEditTimeLimited,
   canDeleteInteraction,
 } from "./permissions/interaction";
 
@@ -30,6 +31,7 @@ export {
   canManageSourceTypes,
   canManageClientDeal,
   canTriggerIntelBrief,
+  canGrantIntelBriefAccess,
   canViewAnalytics,
   canImportLeads,
 } from "./permissions/admin";

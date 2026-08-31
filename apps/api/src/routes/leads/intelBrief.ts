@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { authenticate } from "../../middleware/authenticate";
-import { authorize } from "../../middleware/authorize";
-import { Role } from "@lms/types";
+import { canTriggerIntelBrief } from "@lms/auth";
+import type { Role } from "@lms/types";
 import { QUEUES } from "../../plugins/bullmq";
 
 export async function intelBriefRoutes(fastify: FastifyInstance): Promise<void> {
@@ -36,9 +36,10 @@ export async function intelBriefRoutes(fastify: FastifyInstance): Promise<void> 
   // POST /leads/:id/intel-brief/generate — trigger or re-trigger generation
   fastify.post(
     "/:id/intel-brief/generate",
-    { preHandler: [authenticate, authorize([Role.ADMIN, Role.SUB_ADMIN])] },
+    { preHandler: authenticate },
     async (request, reply) => {
       const { id: leadId } = request.params as { id: string };
+      const { id: userId, role, branchId } = request.user;
 
       const lead = await fastify.prisma.lead.findUnique({
         where: { id: leadId },
@@ -50,11 +51,40 @@ export async function intelBriefRoutes(fastify: FastifyInstance): Promise<void> 
           industry: true,
           dealSizeEstimate: true,
           isProfileComplete: true,
+          assignedToId: true,
+          createdById: true,
         },
       });
 
       if (!lead) {
         return reply.status(404).send({ success: false, error: { message: "Lead not found" } });
+      }
+
+      // Read the grant from the DB, not the JWT — revoking access must take
+      // effect immediately rather than waiting for the token to expire.
+      const actor = await fastify.prisma.user.findUnique({
+        where: { id: userId },
+        select: { canGenerateIntelBrief: true },
+      });
+
+      const allowed = canTriggerIntelBrief(
+        {
+          id: userId,
+          role: role as Role,
+          branchId,
+          canGenerateIntelBrief: actor?.canGenerateIntelBrief ?? false,
+        },
+        { assignedToId: lead.assignedToId, createdById: lead.createdById },
+      );
+
+      if (!allowed) {
+        return reply.status(403).send({
+          success: false,
+          error: {
+            code: "FORBIDDEN",
+            message: "You do not have access to generate Intel Briefs for this lead",
+          },
+        });
       }
 
       // Remove any existing failed/stale job so this retry is always a fresh run
