@@ -23,13 +23,6 @@ function optionalEnv(key: string, fallback: string): string {
   return process.env[key] ?? fallback;
 }
 
-// null = omit thinkingConfig entirely and let the model apply its own default.
-function parseThinkingBudget(raw: string): number | null {
-  if (raw.trim().toLowerCase() === "auto") return null;
-  const parsed = parseInt(raw, 10);
-  return Number.isNaN(parsed) ? null : parsed;
-}
-
 export const config = {
   env: optionalEnv("NODE_ENV", "development"),
   port: parseInt(optionalEnv("PORT", "5000"), 10),
@@ -76,13 +69,14 @@ export const config = {
   // GEMINI_API_KEY is accepted as an alias because that is the name Google's
   // own docs and SDK samples use.
   googleAiApiKey: optionalEnv("GOOGLE_AI_API_KEY", "") || optionalEnv("GEMINI_API_KEY", ""),
-  geminiModel: optionalEnv("GEMINI_MODEL", "gemini-2.5-flash"),
-  // Thinking tokens share the output budget with the function call carrying the
-  // brief, so this is 0 (disabled) by default. Set to `auto` to let the model
-  // decide, or a token count to allow a fixed amount.
-  geminiThinkingBudget: parseThinkingBudget(
-    optionalEnv("GEMINI_THINKING_BUDGET", "0"),
-  ),
+  geminiModel: optionalEnv("GEMINI_MODEL", "gemini-3.6-flash"),
+  // Thinking effort. Gemini 3 models take a level (MINIMAL | LOW | MEDIUM |
+  // HIGH); the 2.5 generation took a numeric token budget and rejects a level
+  // (and vice versa — 3.x returns 400 on thinkingBudget). Either form is
+  // accepted here so changing GEMINI_MODEL across generations only needs this
+  // one env; `auto` omits it and lets the model choose. Parsed in
+  // services/intelBrief.ts, where the SDK types live.
+  geminiThinking: optionalEnv("GEMINI_THINKING", "MINIMAL"),
 
   // ── Intel Brief — Data Collection APIs (Phase 5) ──
   googlePlacesApiKey:    optionalEnv("GOOGLE_PLACES_API_KEY", ""),

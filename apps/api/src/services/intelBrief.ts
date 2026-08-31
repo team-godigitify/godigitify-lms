@@ -6,6 +6,8 @@ import {
   type FunctionDeclaration,
   type Part,
   type Schema,
+  type ThinkingConfig,
+  type ThinkingLevel,
 } from "@google/genai";
 import { config } from "../config";
 import type { IntelBriefValidatedOutput } from "@lms/types";
@@ -27,6 +29,22 @@ const RELEVANT_META_PROPS = new Set([
   "twitter:description",
   "description",
 ]);
+
+const THINKING_LEVELS = new Set(["MINIMAL", "LOW", "MEDIUM", "HIGH"]);
+
+// Gemini 3 models take a thinkingLevel and reject thinkingBudget with a bare
+// 400; the 2.5 generation is the other way round. Accept either spelling from
+// GEMINI_THINKING so switching GEMINI_MODEL across generations is a one-line
+// change. null = send no thinkingConfig and let the model decide.
+function parseThinkingConfig(raw: string): ThinkingConfig | null {
+  const value = raw.trim().toUpperCase();
+  if (!value || value === "AUTO") return null;
+  if (THINKING_LEVELS.has(value)) return { thinkingLevel: value as ThinkingLevel };
+  const budget = parseInt(value, 10);
+  return Number.isNaN(budget) ? null : { thinkingBudget: budget };
+}
+
+const THINKING_CONFIG = parseThinkingConfig(config.geminiThinking);
 
 type FetchResult = { text: string; metaFound: boolean };
 
@@ -475,18 +493,13 @@ Step 3: Call submit_intel_brief once with the complete brief.`;
           functionCallingConfig: { mode: FunctionCallingConfigMode.ANY },
         },
         // The full brief (11 fields incl. several 3-5 item arrays of detailed
-        // strings) reliably exceeds 4096 output tokens. A truncated function
-        // call doesn't fail cleanly — the cut-off arguments arrive as a partial
-        // object with fields silently missing. This is a ceiling, not a floor:
-        // only billed for tokens actually used.
-        maxOutputTokens: 8192,
-        // Thinking tokens are drawn from the same output budget as the function
-        // call itself, so thinking is off by default to keep all 8192 for the
-        // brief. Raise GEMINI_THINKING_BUDGET (and maxOutputTokens with it) if
-        // brief quality needs it; set it to `auto` to let the model decide.
-        ...(config.geminiThinkingBudget !== null
-          ? { thinkingConfig: { thinkingBudget: config.geminiThinkingBudget } }
-          : {}),
+        // strings) reliably exceeds 4096 output tokens, and thinking tokens
+        // come out of this same budget. A truncated function call doesn't fail
+        // cleanly — the cut-off arguments arrive as a partial object with
+        // fields silently missing. This is a ceiling, not a floor: only billed
+        // for tokens actually used.
+        maxOutputTokens: 16384,
+        ...(THINKING_CONFIG ? { thinkingConfig: THINKING_CONFIG } : {}),
       },
     });
 
