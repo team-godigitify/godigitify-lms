@@ -71,6 +71,14 @@ export const config = {
     `${optionalEnv("FRONTEND_URL", "http://localhost:3000")}/logo.png`,
   ),
 
+  // Dark-theme wordmark — same lockup with the black ink swapped for white so
+  // it survives a dark mail background (the orange stays orange). Served to
+  // clients that honour prefers-color-scheme; everyone else gets the black one.
+  emailLogoDarkUrl: optionalEnv(
+    "EMAIL_LOGO_DARK_URL",
+    `${optionalEnv("FRONTEND_URL", "http://localhost:3000")}/logo-white.png`,
+  ),
+
   // ── Intel Brief — Google AI Studio / Gemini (Phase 5) ──
   // Each generation is its own stateless conversation — no history is carried
   // between briefs. Key comes from aistudio.google.com → Get API key.

@@ -80,8 +80,34 @@ function emailHeader(): string {
   if (!url.startsWith("https://")) {
     return `<div class="brand-text">be<span class="accent" style="color:#FF6A00;">your</span>own</div>`;
   }
+
   // 150x27 keeps the wordmark's real 5.48:1 ratio — a square box squashes it.
-  return `<div class="brand"><img src="${url}" alt="Beyourown" width="150" height="27" style="display:block;width:150px;height:27px;"></div>`;
+  const dims = `width="150" height="27" style="display:block;width:150px;height:27px;"`;
+
+  const darkUrl = config.emailLogoDarkUrl;
+  if (!darkUrl.startsWith("https://")) {
+    return `<div class="brand"><img src="${url}" alt="Beyourown" ${dims}></div>`;
+  }
+
+  // The wordmark's "be" and "own" are black ink on transparency, so any client
+  // that repaints the card near-black in dark mode erases two thirds of the
+  // logo — only the orange "your" survives. Mail clients never invert images,
+  // so the fix is to hand them a white-ink copy instead. Two hooks, because no
+  // single one is understood everywhere:
+  //   <picture> + prefers-color-scheme → Apple Mail, Outlook mac/iOS/Android, Samsung
+  //   .logo-light/.logo-dark swap      → Outlook.com, which drops @media rules
+  //                                      but tags the tree with data-ogsc/-ogsb
+  // The second <img> is fenced off from Outlook on Windows, which honours
+  // neither hook and would otherwise stack both wordmarks on top of each other.
+  return `<div class="brand">
+        <picture>
+          <source srcset="${darkUrl}" media="(prefers-color-scheme: dark)">
+          <img src="${url}" alt="Beyourown" class="logo-light" ${dims}>
+        </picture>
+        <!--[if !mso]><!-->
+        <img src="${darkUrl}" alt="Beyourown" class="logo-dark" width="150" height="27" style="display:none;width:150px;height:27px;">
+        <!--<![endif]-->
+      </div>`;
 }
 
 function htmlWrapper(content: string): string {
@@ -103,7 +129,13 @@ function htmlWrapper(content: string): string {
       .footer { font-size: 12px; color: #9ca3af; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
       .highlight { background: #FFF4EC; border: 1px solid #FFD3B0; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
       .brand { margin-bottom: 20px; }
-      .brand img { display: block; width: 150px; height: 27px; }
+      .brand img { width: 150px; height: 27px; }
+      /* Dark-mode wordmark swap — see emailHeader(). Deliberately the only
+         dark-mode rule here: the templates below carry hardcoded light inline
+         colours (summary tables, tinted highlight boxes), so the email leans on
+         the client's own inversion for everything except the logo image. */
+      [data-ogsc] .logo-light, [data-ogsb] .logo-light { display: none !important; }
+      [data-ogsc] .logo-dark, [data-ogsb] .logo-dark { display: block !important; }
       .brand-text { font-size: 20px; font-weight: bold; color: #111827; margin-bottom: 20px; letter-spacing: -0.5px; }
       .brand-text .accent { color: #FF6A00; }
     </style>
