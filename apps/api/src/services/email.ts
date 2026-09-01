@@ -72,6 +72,17 @@ export async function verifyEmailConnection(): Promise<boolean> {
   return false;
 }
 
+// Only an https URL is worth emitting — mail clients silently drop relative
+// paths and can't reach a localhost host, which would render a broken-image
+// icon at the top of every email. Falls back to a plain wordmark.
+function emailHeader(): string {
+  const url = config.emailLogoUrl;
+  if (!url.startsWith("https://")) {
+    return `<div class="brand-text">Beyourown</div>`;
+  }
+  return `<div class="brand"><img src="${url}" alt="Beyourown" width="40" height="40"></div>`;
+}
+
 function htmlWrapper(content: string): string {
   return `
   <!DOCTYPE html>
@@ -86,12 +97,16 @@ function htmlWrapper(content: string): string {
       .btn { display: inline-block; background: #47216b; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none !important; font-weight: 600; margin: 16px 0; }
       .footer { font-size: 12px; color: #9ca3af; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
       .highlight { background: #f0f9f4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+      .brand { margin-bottom: 20px; }
+      .brand img { display: block; width: 40px; height: 40px; }
+      .brand-text { font-size: 18px; font-weight: bold; color: #47216b; margin-bottom: 20px; }
     </style>
   </head>
   <body>
     <div class="card">
+      ${emailHeader()}
       ${content}
-      <div class="footer">Godigitify · Banur, Punjab<br>This is an automated email, please do not reply.</div>
+      <div class="footer">Beyourown · Banur, Punjab<br>This is an automated email, please do not reply.</div>
     </div>
   </body>
   </html>`;
@@ -127,7 +142,7 @@ async function send(payload: EmailPayload): Promise<void> {
     // Parse "Name <email@domain>" → { name, email }
     const fromMatch = config.smtp.from.match(/^(.*?)\s*<(.+)>$/);
     const senderName =
-      fromMatch?.[1]?.replace(/^"|"$/g, "").trim() || "Godigitify CRM";
+      fromMatch?.[1]?.replace(/^"|"$/g, "").trim() || "Beyourown CRM";
     const senderEmail = fromMatch?.[2]?.trim() || config.smtp.from;
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -193,9 +208,9 @@ export async function sendWelcomeSetupEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Set up your Godigitify CRM account",
+    subject: "Set up your Beyourown CRM account",
     html: htmlWrapper(`
-      <div class="title">Welcome to Godigitify CRM, ${esc(params.name)}!</div>
+      <div class="title">Welcome to Beyourown CRM, ${esc(params.name)}!</div>
       <div class="body">
         Your account has been created with the role of <strong>${esc(params.role)}</strong>.
         Please set your password to get started.
@@ -215,7 +230,7 @@ export async function sendPasswordResetEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Reset your Godigitify CRM password",
+    subject: "Reset your Beyourown CRM password",
     html: htmlWrapper(`
       <div class="title">Password Reset Request</div>
       <div class="body">Hi ${esc(params.name)}, we received a request to reset your password.</div>
@@ -234,7 +249,7 @@ export async function sendPasswordChangedEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Your Godigitify CRM password has been reset",
+    subject: "Your Beyourown CRM password has been reset",
     html: htmlWrapper(`
       <div class="title">Password Reset by Administrator</div>
       <div class="body">Hi ${esc(params.name)}, your password has been reset by an administrator.</div>
@@ -253,7 +268,7 @@ export async function sendAccountDeactivatedEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Your Godigitify CRM account has been deactivated",
+    subject: "Your Beyourown CRM account has been deactivated",
     html: htmlWrapper(`
       <div class="title">Account Deactivated</div>
       <div class="body">
@@ -389,7 +404,7 @@ export async function sendLeadCreatedEmail(params: {
   const greeting = params.leadName ? `Dear <strong>${esc(params.leadName)}</strong>` : "Hello";
   await send({
     to: params.to,
-    subject: "Your enquiry has been received — Godigitify",
+    subject: "Your enquiry has been received — Beyourown",
     html: htmlWrapper(`
       <div class="title">Thank You for Your Enquiry!</div>
       <div class="body">
@@ -398,13 +413,13 @@ export async function sendLeadCreatedEmail(params: {
       </div>
       <div class="highlight">
         <strong>What happens next?</strong><br>
-        Our team will reach out within 24 hours to understand your goals and discuss how Godigitify can help.
+        Our team will reach out within 24 hours to understand your goals and discuss how Beyourown can help.
       </div>
       <div class="body">
         If you have any urgent questions, feel free to contact us directly.
       </div>
       <div class="body" style="color: #6b7280; font-size: 13px; margin-top: 12px;">
-        Godigitify — Digital Marketing Agency, Banur, Punjab.
+        Beyourown — Digital Marketing Agency, Banur, Punjab.
       </div>
     `),
   });
@@ -448,7 +463,7 @@ export async function sendDailyEmployeeReport(
 
   await send({
     to: params.to,
-    subject: `Your Daily Report — ${params.date} | Godigitify`,
+    subject: `Your Daily Report — ${params.date} | Beyourown`,
     html: htmlWrapper(`
       <div class="title">Your Daily Performance</div>
       <div class="body">Hi <strong>${esc(params.name)}</strong>, here's your summary for <strong>${esc(params.date)}</strong>.</div>
@@ -509,7 +524,7 @@ export async function sendAdminDailyReport(params: {
 
   await send({
     to: params.to,
-    subject: `Team Daily Report — ${params.date} | Godigitify`,
+    subject: `Team Daily Report — ${params.date} | Beyourown`,
     html: htmlWrapper(`
       <div class="title">Team Daily Summary</div>
       <div class="body">Hi <strong>${esc(params.adminName)}</strong>, here is today's team performance for <strong>${esc(params.date)}</strong>.</div>

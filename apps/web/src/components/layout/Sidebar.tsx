@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   LayoutDashboard,
@@ -121,15 +122,29 @@ export function Sidebar({ onClose }: Props) {
         isMobile ? "w-72" : collapsed ? "w-16" : "w-60",
       )}
     >
-      {/* Unbranded header strip. Kept at h-16 with no mark or wordmark so the
-          rail still lines up with the main Header, and so the mobile close
-          button has somewhere to sit. */}
+      {/* Brand strip. Held at h-16 so the rail still lines up with the main
+          Header, and so the mobile close button has somewhere to sit. When the
+          rail is collapsed only the mark shows. */}
       <div
         className={cn(
           "flex h-16 border-b border-gray-200 px-4",
-          isExpanded ? "items-center justify-end gap-3" : "items-center justify-center",
+          isExpanded ? "items-center justify-between gap-3" : "items-center justify-center",
         )}
       >
+        <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
+          <Image
+            src="/logo.png"
+            alt="Beyourown"
+            width={32}
+            height={32}
+            className="h-8 w-8 shrink-0 object-contain"
+          />
+          {isExpanded && (
+            <span className="truncate text-sm font-bold text-gray-800">
+              Beyourown
+            </span>
+          )}
+        </Link>
         {isMobile && (
           <button
             type="button"

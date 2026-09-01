@@ -1,4 +1,4 @@
-# Godigitify CRM — Analytics Experience Redesign
+# Beyourown CRM — Analytics Experience Redesign
 ## Product Requirements Document
 
 **Status:** Draft for review · **Owner:** CRM Product/Consulting team · **Scope:** Complete redesign of the analytics/dashboard/reporting experience, reusing the existing backend domain model and extending it where the audit found real gaps.
@@ -63,7 +63,7 @@ This section is a factual record of what exists in `d:\web_all\godigitify-lms` a
 - Frontend RBAC is redirect/hide-only (`useEffect` + `router.replace`), copy-pasted into 5+ pages. A generic `AuthGuard.tsx` component exists that does this correctly and is **never used**. Real enforcement is server-side (`authorize()` middleware) — the frontend checks are UX polish only, not a security boundary, which is fine, but the duplication is a maintenance cost.
 - **Duplicate/dead surface area confirmed:** `/employees` vs `/users` (near-identical, `/users` orphaned from nav — leftover from LMS migration); `LeadTable.tsx` (unused, more feature-complete — has clickable sort headers) vs. the inline `LeadTableWithBulk` actually rendered (no working column sort in production); a second, dead notifications drawer in `Header.tsx`; unused shadcn primitives (`select.tsx`, `dropdown-menu.tsx`, `empty-state.tsx`) alongside a fully-adopted hand-rolled component set (`Button`, `Input`, `Modal`, `Badge`, `Pagination`).
 - **Notifications have no persistence.** The bell polls `/activity/notifications` every 30s and derives categories client-side; "read" state is a `localStorage` timestamp heuristic — no per-notification read flag, no cross-device sync, no history.
-- Design tokens: Tailwind v4 `@theme`, Godigitify purple scale (`--color-primary: #47216b`), no dark-mode token set defined yet.
+- Design tokens: Tailwind v4 `@theme`, Beyourown purple scale (`--color-primary: #47216b`), no dark-mode token set defined yet.
 
 ### 1.5 A real access-control gap (flag for immediate fix, not just redesign)
 
@@ -519,7 +519,7 @@ Each phase should ship independently reviewable and behind no long-lived feature
 
 - Custom-field system (mentioned as a global filter dimension in §11 but genuinely out of scope until a custom-field framework exists on `Lead`).
 - Predictive lead scoring via a trained model rather than a rule-based weighted score, once enough historical `InteractionLog`/outcome data accumulates.
-- Multi-currency support if Godigitify expands beyond INR-denominated deals.
+- Multi-currency support if Beyourown expands beyond INR-denominated deals.
 - Cross-branch employee comparison/benchmarking (deliberately excluded from SubAdmin's dashboard in §4 — would need a separate ADMIN-only "cross-branch talent" view if ever requested).
 - Real-time (WebSocket) dashboard updates instead of the current poll/cache-TTL model, if 15-minute staleness ever becomes a business problem.
 - Mobile-native push notifications, once the persisted `Notification` model (§16) exists as the backing store.

@@ -22,6 +22,12 @@ import { cn } from "@/lib/utils";
 
 dayjs.extend(relativeTime);
 
+// Time of day a follow-up lands on when the user picks a preset (Tomorrow,
+// 3 Days, ...) and no time has been chosen yet. Only a default — an existing
+// follow-up keeps its own time, and the custom picker overrides it.
+const DEFAULT_FOLLOW_UP_HOUR = 11;
+const DEFAULT_FOLLOW_UP_MINUTE = 11;
+
 function FollowUpCard({ lead }: { lead: Lead }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState("");
@@ -54,7 +60,7 @@ function FollowUpCard({ lead }: { lead: Lead }) {
       ? dayjs(value)
       : lead.nextFollowUpAt
         ? dayjs(lead.nextFollowUpAt)
-        : dayjs().hour(10).minute(0);
+        : dayjs().hour(DEFAULT_FOLLOW_UP_HOUR).minute(DEFAULT_FOLLOW_UP_MINUTE);
     const date = dayjs()
       .add(days, "day")
       .hour(currentTime.hour())

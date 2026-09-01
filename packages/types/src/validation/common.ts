@@ -96,7 +96,7 @@ export const uploadUrl = z
         const isAllowed =
           allowedHosts.some((h) => parsed.hostname.includes(h)) ||
           parsed.hostname.includes("r2.dev") ||
-          parsed.hostname.includes("godigitify.com");
+          parsed.hostname.includes("beyourown.in");
         return isAllowed;
       } catch {
         return false;

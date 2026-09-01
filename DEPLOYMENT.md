@@ -1,4 +1,4 @@
-# FutureEd LMS — Deployment Guide
+# Beyourown CRM — Deployment Guide
 
 ## Architecture Decision: Vercel + DigitalOcean
 
@@ -28,7 +28,7 @@ You need to collect these before doing anything:
 #### Gmail SMTP (Email)
 1. Go to your Google Account → **Security** → **2-Step Verification** (must be ON)
 2. Go to **Security** → **App Passwords**
-3. Select App: **Mail**, Device: **Other** → name it "FutureEd LMS"
+3. Select App: **Mail**, Device: **Other** → name it "Beyourown CRM"
 4. Copy the 16-character password — you will never see it again
 
 ```
@@ -36,13 +36,13 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=yourname@gmail.com
 SMTP_PASS=xxxx xxxx xxxx xxxx      ← the 16-char app password (spaces are fine, or remove them)
-SMTP_FROM=FutureEd LMS <yourname@gmail.com>
+SMTP_FROM=Beyourown CRM <yourname@gmail.com>
 ```
 
 #### Cloudflare R2 (File Upload)
 1. Log in at **dash.cloudflare.com**
 2. Left sidebar → **R2 Object Storage** → **Create Bucket**
-   - Bucket name: `futureed-docs` (or any name, no spaces)
+   - Bucket name: `beyourown-docs` (or any name, no spaces)
    - Region: Auto (leave default)
 3. After creating: click the bucket → **Settings** tab → copy the **S3 API Endpoint** and **Account ID**
 4. Back on R2 overview → **Manage R2 API tokens** → **Create API Token**
@@ -56,13 +56,13 @@ SMTP_FROM=FutureEd LMS <yourname@gmail.com>
 R2_ACCOUNT_ID=your-account-id
 R2_ACCESS_KEY_ID=your-access-key-id
 R2_SECRET_ACCESS_KEY=your-secret-access-key
-R2_BUCKET_NAME=futureed-docs
+R2_BUCKET_NAME=beyourown-docs
 R2_PUBLIC_URL=https://pub-xxxxxxxxxxxxxxxx.r2.dev
 ```
 
 #### Upstash Redis (Queue + Cache)
 1. Go to **console.upstash.com** → Create account → **Create Database**
-   - Name: `futureed-redis`
+   - Name: `beyourown-redis`
    - Region: `ap-south-1` (closest to India)
    - Type: **Regional** (free)
 2. After creation → **Details** tab → copy the **Redis URL**
@@ -124,7 +124,7 @@ On the "Configure your app" screen, click **Edit** on the detected service (or *
 
 | Setting | Value |
 |---------|-------|
-| **Name** | `futureed-api` |
+| **Name** | `beyourown-api` |
 | **Source Directory** | `apps/api` |
 | **Build Command** | `cd ../.. && npm install -g pnpm && pnpm install --frozen-lockfile && pnpm --filter @lms/db db:generate && pnpm --filter api build` |
 | **Run Command** | `node dist/app.js` |
@@ -151,12 +151,12 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=yourname@gmail.com
 SMTP_PASS=your-16-char-app-password
-SMTP_FROM=FutureEd LMS <yourname@gmail.com>
+SMTP_FROM=Beyourown CRM <yourname@gmail.com>
 
 R2_ACCOUNT_ID=your-cloudflare-account-id
 R2_ACCESS_KEY_ID=your-r2-access-key-id
 R2_SECRET_ACCESS_KEY=your-r2-secret-access-key
-R2_BUCKET_NAME=futureed-docs
+R2_BUCKET_NAME=beyourown-docs
 R2_PUBLIC_URL=https://pub-xxxxxxxxxxxxxxxx.r2.dev
 ```
 
@@ -168,12 +168,12 @@ Click **Create Resources** → wait 3–5 minutes for the build.
 
 Once deployed, your API will be at:
 ```
-https://futureed-api-xxxxx.ondigitalocean.app
+https://beyourown-api-xxxxx.ondigitalocean.app
 ```
 
 Test it:
 ```
-https://futureed-api-xxxxx.ondigitalocean.app/health
+https://beyourown-api-xxxxx.ondigitalocean.app/health
 ```
 Expected response: `{"status":"ok"}`
 
@@ -211,7 +211,7 @@ cd packages/db && npx prisma migrate deploy
 Under **Environment Variables**:
 
 ```
-NEXT_PUBLIC_API_URL=https://futureed-api-xxxxx.ondigitalocean.app
+NEXT_PUBLIC_API_URL=https://beyourown-api-xxxxx.ondigitalocean.app
 ```
 
 > This is the only frontend env var. It must start with `NEXT_PUBLIC_` to be exposed in the browser.
@@ -222,7 +222,7 @@ Click **Deploy** → wait 2–3 minutes.
 
 Your frontend will be live at:
 ```
-https://futureed-lms.vercel.app   (or your custom domain)
+https://beyourown-crm.vercel.app   (or your custom domain)
 ```
 
 ### 4.5 Update Backend CORS
@@ -230,8 +230,8 @@ https://futureed-lms.vercel.app   (or your custom domain)
 Go back to DigitalOcean App Platform → your app → **Settings** → **Environment Variables** → update:
 
 ```
-CORS_ORIGIN=https://futureed-lms.vercel.app
-FRONTEND_URL=https://futureed-lms.vercel.app
+CORS_ORIGIN=https://beyourown-crm.vercel.app
+FRONTEND_URL=https://beyourown-crm.vercel.app
 ```
 
 Click **Save** → the backend auto-redeploys.
@@ -242,23 +242,23 @@ Click **Save** → the backend auto-redeploys.
 
 ### Frontend (Vercel)
 1. Vercel dashboard → your project → **Settings** → **Domains**
-2. Add `lms.futureeducation.in` (or whatever your domain is)
+2. Add `crm.beyourown.in` (or whatever your domain is)
 3. Vercel gives you DNS records — add them in your domain registrar
 
 ### Backend (DigitalOcean)
 1. App Platform → your app → **Settings** → **Domains**
-2. Add `api.futureeducation.in`
+2. Add `api.beyourown.in`
 3. Add the CNAME record in your domain registrar
 
 After custom domains are live, update env vars:
 ```
 # Backend
-CORS_ORIGIN=https://lms.futureeducation.in
-FRONTEND_URL=https://lms.futureeducation.in
-API_BASE_URL=https://api.futureeducation.in/api/v1
+CORS_ORIGIN=https://crm.beyourown.in
+FRONTEND_URL=https://crm.beyourown.in
+API_BASE_URL=https://api.beyourown.in/api/v1
 
 # Frontend (Vercel)
-NEXT_PUBLIC_API_URL=https://api.futureeducation.in
+NEXT_PUBLIC_API_URL=https://api.beyourown.in
 ```
 
 ---
@@ -267,7 +267,7 @@ NEXT_PUBLIC_API_URL=https://api.futureeducation.in
 
 ### 6.1 Health Check
 ```
-GET https://api.futureeducation.in/health
+GET https://api.beyourown.in/health
 → { "status": "ok" }
 ```
 
@@ -346,11 +346,11 @@ For 17 users the Basic plan ($5/mo, 512MB RAM) is more than sufficient. If you e
 | `SMTP_PORT` | No | `587` | 587 for TLS, 465 for SSL |
 | `SMTP_USER` | Yes* | `you@gmail.com` | *Emails won't send without this |
 | `SMTP_PASS` | Yes* | `xxxx xxxx xxxx xxxx` | Gmail App Password |
-| `SMTP_FROM` | No | `FutureEd LMS <you@gmail.com>` | Sender name shown in emails |
+| `SMTP_FROM` | No | `Beyourown CRM <you@gmail.com>` | Sender name shown in emails |
 | `R2_ACCOUNT_ID` | Yes* | `abc123def456` | *Falls back to local disk without this |
 | `R2_ACCESS_KEY_ID` | Yes* | `your-key-id` | Cloudflare R2 API token |
 | `R2_SECRET_ACCESS_KEY` | Yes* | `your-secret` | Cloudflare R2 API secret |
-| `R2_BUCKET_NAME` | Yes* | `futureed-docs` | Your R2 bucket name |
+| `R2_BUCKET_NAME` | Yes* | `beyourown-docs` | Your R2 bucket name |
 | `R2_PUBLIC_URL` | Yes* | `https://pub-xxx.r2.dev` | R2 public access URL |
 
 ### Frontend (`apps/web/.env.local` or Vercel env vars)

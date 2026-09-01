@@ -121,10 +121,10 @@ export function isOutboundMessage(body: unknown): boolean {
 
 // ── Auto-reply ─────────────────────────────────────────────────────────────
 
-// Bilingual Hindi+English — warm, builds trust with North Indian students.
-// Recommended option (under 150 chars, ~110 chars):
+// Bilingual Hindi+English — warm, builds trust with North Indian prospects.
+// Kept under 150 chars.
 const AUTO_REPLY_MESSAGE =
-  "Namaste! 🙏 Aapka message mil gaya. Jald hi hamare counsellor aapko contact karenge. — Future Education Bokaro";
+  "Namaste! 🙏 Aapka message mil gaya. Jald hi hamari team aapko contact karegi. — Beyourown";
 
 export async function sendWhatsAppReply(
   to: string,

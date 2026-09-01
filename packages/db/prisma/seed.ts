@@ -18,35 +18,35 @@ async function main() {
     update: {},
     create: {
       id: "branch-banur",
-      name: "Godigitify - Banur",
+      name: "Beyourown - Banur",
       city: "Banur, Punjab",
       address: "Banur, Punjab, India",
     },
   });
 
   // 2. Seed admin and test users
-  const adminPasswordHash = await bcrypt.hash("Admin@Godigitify123", 12);
+  const adminPasswordHash = await bcrypt.hash("Admin@Beyourown123", 12);
 
   await prisma.user.upsert({
-    where: { email: "admin@godigitify.com" },
+    where: { email: "admin@beyourown.in" },
     update: { passwordHash: adminPasswordHash },
     create: {
       name: "Admin",
-      email: "admin@godigitify.com",
+      email: "admin@beyourown.in",
       passwordHash: adminPasswordHash,
       role: "ADMIN",
       branchId: branch.id,
     },
   });
 
-  const subAdminPasswordHash = await bcrypt.hash("SubAdmin@Godigitify123", 12);
+  const subAdminPasswordHash = await bcrypt.hash("SubAdmin@Beyourown123", 12);
 
   await prisma.user.upsert({
-    where: { email: "subadmin@godigitify.com" },
+    where: { email: "subadmin@beyourown.in" },
     update: { passwordHash: subAdminPasswordHash },
     create: {
       name: "Sub Admin",
-      email: "subadmin@godigitify.com",
+      email: "subadmin@beyourown.in",
       passwordHash: subAdminPasswordHash,
       role: "SUB_ADMIN",
       branchId: branch.id,

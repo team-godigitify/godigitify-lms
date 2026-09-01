@@ -50,7 +50,7 @@ export const config = {
   r2PublicUrl: optionalEnv("R2_PUBLIC_URL", "http://localhost:5000/uploads"),
 
   // App
-  apiBaseUrl: optionalEnv("API_BASE_URL", "https://api.godigitify.com"),
+  apiBaseUrl: optionalEnv("API_BASE_URL", "https://api.beyourown.in"),
 
   // Email — set ONE of these three (priority: Resend → Brevo API → SMTP)
   resendApiKey: optionalEnv("RESEND_API_KEY", ""),
@@ -60,8 +60,16 @@ export const config = {
     port: parseInt(optionalEnv("SMTP_PORT", "587"), 10),
     user: optionalEnv("SMTP_USER", ""),
     pass: optionalEnv("SMTP_PASS", ""),
-    from: optionalEnv("SMTP_FROM", "Godigitify CRM <noreply@godigitify.com>"),
+    from: optionalEnv("SMTP_FROM", "Beyourown CRM <noreply@beyourown.in>"),
   },
+
+  // Logo shown at the top of transactional emails. Must be a PUBLIC https URL —
+  // mail clients cannot load a relative path or a localhost host, so in dev the
+  // header simply falls back to a text wordmark.
+  emailLogoUrl: optionalEnv(
+    "EMAIL_LOGO_URL",
+    `${optionalEnv("FRONTEND_URL", "http://localhost:3000")}/logo.png`,
+  ),
 
   // ── Intel Brief — Google AI Studio / Gemini (Phase 5) ──
   // Each generation is its own stateless conversation — no history is carried
@@ -69,7 +77,7 @@ export const config = {
   // GEMINI_API_KEY is accepted as an alias because that is the name Google's
   // own docs and SDK samples use.
   googleAiApiKey: optionalEnv("GOOGLE_AI_API_KEY", "") || optionalEnv("GEMINI_API_KEY", ""),
-  geminiModel: optionalEnv("GEMINI_MODEL", "gemini-3.6-flash"),
+  geminiModel: optionalEnv("GEMINI_MODEL", "gemini-3.5-flash"),
   // Thinking effort. Gemini 3 models take a level (MINIMAL | LOW | MEDIUM |
   // HIGH); the 2.5 generation took a numeric token budget and rejects a level
   // (and vice versa — 3.x returns 400 on thinkingBudget). Either form is

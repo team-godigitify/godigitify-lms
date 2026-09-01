@@ -74,7 +74,7 @@ export default function ForgotPasswordPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@futureeducation.in"
+                placeholder="you@beyourown.in"
                 className={cn(
                   'w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-colors',
                   error

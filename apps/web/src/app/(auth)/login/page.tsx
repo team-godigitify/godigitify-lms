@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Eye, EyeOff, AlertTriangle, Lock } from "lucide-react";
 import { isAxiosError } from "axios";
 import toast from "react-hot-toast";
@@ -145,9 +146,17 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          <h2 className="text-3xl font-bold text-white mb-3">
-            Lead Management System
-          </h2>
+          <div className="mb-6 rounded-2xl bg-white/95 p-4 shadow-lg">
+            <Image
+              src="/logo.png"
+              alt="Beyourown"
+              width={72}
+              height={72}
+              priority
+              className="h-16 w-16 object-contain"
+            />
+          </div>
+          <h2 className="text-3xl font-bold text-white mb-3">Beyourown CRM</h2>
           <p className="text-primary-100 text-base max-w-xs leading-relaxed">
             Track, manage, and convert digital marketing leads into
             long-term clients
@@ -157,8 +166,8 @@ export default function LoginPage() {
           <div className="mt-12 grid grid-cols-3 gap-6 w-full max-w-xs">
             {[
               { label: "Active Leads", value: "2.3K+" },
-              { label: "Confirmed", value: "340+" },
-              { label: "Counsellors", value: "12" },
+              { label: "Clients", value: "340+" },
+              { label: "Team", value: "12" },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
                 <p className="text-2xl font-bold text-white">{stat.value}</p>
@@ -173,6 +182,15 @@ export default function LoginPage() {
       <div className="flex-1 flex flex-col items-center justify-center p-6 bg-white">
         <div className="w-full max-w-sm">
           <div className="mb-8">
+            {/* Left brand panel is hidden below lg, so carry the mark here */}
+            <Image
+              src="/logo.png"
+              alt="Beyourown"
+              width={48}
+              height={48}
+              priority
+              className="lg:hidden mb-4 h-12 w-12 object-contain"
+            />
             <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
             <p className="text-sm text-gray-500 mt-1">
               Sign in to your account to continue
@@ -217,7 +235,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 disabled={isLockedOut || login.isPending}
-                placeholder="you@futureeducation.in"
+                placeholder="you@beyourown.in"
                 className={cn(
                   "w-full px-4 py-2.5 rounded-lg border text-sm outline-none transition-colors",
                   "placeholder:text-gray-400 disabled:bg-surface-100 disabled:cursor-not-allowed",
@@ -296,7 +314,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-xs text-gray-400 mt-8">
-            Future Education Trust · Bokaro Steel City
+            Beyourown
           </p>
         </div>
       </div>

@@ -46,7 +46,7 @@ export function Header({ onMenuClick }: Props) {
   // Exact match first (covers every registered route), then fall back to
   // prefix matching so new sub-routes (e.g. /analytics/revenue,
   // /reports/[id]) inherit their section's title instead of dropping to
-  // the stale pre-rebrand "FutureEd LMS" placeholder.
+  // a generic "CRM" placeholder.
   const title =
     PAGE_TITLES[pathname] ??
     (pathname.startsWith("/analytics")
