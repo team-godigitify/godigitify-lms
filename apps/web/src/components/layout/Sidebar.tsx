@@ -131,17 +131,25 @@ export function Sidebar({ onClose }: Props) {
           isExpanded ? "items-center justify-between gap-3" : "items-center justify-center",
         )}
       >
-        <Link href="/dashboard" className="flex items-center gap-2 min-w-0">
-          <Image
-            src="/logo.png"
-            alt="Beyourown"
-            width={32}
-            height={32}
-            className="h-8 w-8 shrink-0 object-contain"
-          />
-          {isExpanded && (
-            <span className="truncate text-sm font-bold text-gray-800">
-              Beyourown
+        {/* The asset is a 5.48:1 wordmark, not an icon — it only works at full
+            width. Collapsed, the rail shows the "b" initial instead of a
+            wordmark crushed into 40px. */}
+        <Link href="/dashboard" className="flex items-center min-w-0">
+          {isExpanded ? (
+            <Image
+              src="/logo.png"
+              alt="Beyourown"
+              width={1128}
+              height={206}
+              priority
+              className="h-5 w-auto"
+            />
+          ) : (
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-900 text-sm font-bold text-white"
+              aria-label="Beyourown"
+            >
+              b
             </span>
           )}
         </Link>

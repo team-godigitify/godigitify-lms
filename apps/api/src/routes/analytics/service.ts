@@ -281,15 +281,17 @@ export async function getEmployeePerformance(params: {
 
   const branchFilter = branchId ? { branchId } : {};
 
-  // Fetch employees — optionally scoped to a single employee
+  // Fetch employees — optionally scoped to a single employee.
+  // Deactivated employees are pulled in too, then dropped below unless they
+  // actually contributed in this period. Excluding them outright silently
+  // erased the history of anyone who left, making past periods under-report.
   const employees = await prisma.user.findMany({
     where: {
       ...branchFilter,
       role: "EMPLOYEE",
-      isActive: true,
       ...(params.employeeId ? { id: params.employeeId } : {}),
     },
-    select: { id: true, name: true, email: true },
+    select: { id: true, name: true, email: true, isActive: true },
   });
 
   // Fetch all lead data in bulk — one query, process in JS
@@ -475,7 +477,12 @@ export async function getEmployeePerformance(params: {
     });
 
     return {
-      employee: { id: employee.id, name: employee.name, email: employee.email },
+      employee: {
+        id: employee.id,
+        name: employee.name,
+        email: employee.email,
+        isActive: employee.isActive,
+      },
       metrics: {
         totalAssigned,
         confirmed,
@@ -495,12 +502,20 @@ export async function getEmployeePerformance(params: {
     };
   });
 
-  // Sort by performance score descending — worst performers at bottom
-  metrics.sort(
-    (a, b) => b.metrics.performanceScore - a.metrics.performanceScore,
+  // Active employees always show, even at zero, so a quiet week is visible.
+  // A deactivated employee only shows when they have something in this period.
+  const visible = metrics.filter(
+    (m) =>
+      m.employee.isActive ||
+      m.metrics.totalAssigned > 0 ||
+      m.metrics.callCount > 0 ||
+      m.metrics.leadsInteracted > 0,
   );
 
-  return { employees: metrics, period: { from, to } };
+  // Sort by performance score descending — worst performers at bottom
+  visible.sort((a, b) => b.metrics.performanceScore - a.metrics.performanceScore);
+
+  return { employees: visible, period: { from, to } };
 }
 
 // ═══════════════════════════════════════

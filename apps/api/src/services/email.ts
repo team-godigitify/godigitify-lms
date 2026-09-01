@@ -78,9 +78,10 @@ export async function verifyEmailConnection(): Promise<boolean> {
 function emailHeader(): string {
   const url = config.emailLogoUrl;
   if (!url.startsWith("https://")) {
-    return `<div class="brand-text">Beyourown</div>`;
+    return `<div class="brand-text">be<span class="accent" style="color:#FF6A00;">your</span>own</div>`;
   }
-  return `<div class="brand"><img src="${url}" alt="Beyourown" width="40" height="40"></div>`;
+  // 150x27 keeps the wordmark's real 5.48:1 ratio — a square box squashes it.
+  return `<div class="brand"><img src="${url}" alt="Beyourown" width="150" height="27" style="display:block;width:150px;height:27px;"></div>`;
 }
 
 function htmlWrapper(content: string): string {
@@ -94,12 +95,17 @@ function htmlWrapper(content: string): string {
       .card { background: white; border-radius: 12px; padding: 32px; max-width: 480px; margin: 0 auto; }
       .title { font-size: 20px; font-weight: bold; color: #111827; margin-bottom: 8px; }
       .body { font-size: 14px; color: #374151; line-height: 1.6; }
-      .btn { display: inline-block; background: #47216b; color: #ffffff !important; padding: 12px 24px; border-radius: 8px; text-decoration: none !important; font-weight: 600; margin: 16px 0; }
+      /* Brand palette taken from the logo: #FF6A00 orange on #111827 near-black.
+         The CTA is orange with DARK text, not white — white on this orange is
+         only 2.9:1, which is unreadable for many people; dark-on-orange is
+         6.3:1 and mirrors the wordmark's own orange/black pairing. */
+      .btn { display: inline-block; background: #FF6A00; color: #111827 !important; padding: 12px 24px; border-radius: 8px; text-decoration: none !important; font-weight: 700; margin: 16px 0; }
       .footer { font-size: 12px; color: #9ca3af; margin-top: 24px; border-top: 1px solid #f1f5f9; padding-top: 16px; }
-      .highlight { background: #f0f9f4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
+      .highlight { background: #FFF4EC; border: 1px solid #FFD3B0; border-radius: 8px; padding: 12px 16px; margin: 12px 0; }
       .brand { margin-bottom: 20px; }
-      .brand img { display: block; width: 40px; height: 40px; }
-      .brand-text { font-size: 18px; font-weight: bold; color: #47216b; margin-bottom: 20px; }
+      .brand img { display: block; width: 150px; height: 27px; }
+      .brand-text { font-size: 20px; font-weight: bold; color: #111827; margin-bottom: 20px; letter-spacing: -0.5px; }
+      .brand-text .accent { color: #FF6A00; }
     </style>
   </head>
   <body>
@@ -142,7 +148,7 @@ async function send(payload: EmailPayload): Promise<void> {
     // Parse "Name <email@domain>" → { name, email }
     const fromMatch = config.smtp.from.match(/^(.*?)\s*<(.+)>$/);
     const senderName =
-      fromMatch?.[1]?.replace(/^"|"$/g, "").trim() || "Beyourown CRM";
+      fromMatch?.[1]?.replace(/^"|"$/g, "").trim() || "Beyourown LMS";
     const senderEmail = fromMatch?.[2]?.trim() || config.smtp.from;
 
     const res = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -208,14 +214,14 @@ export async function sendWelcomeSetupEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Set up your Beyourown CRM account",
+    subject: "Set up your Beyourown LMS account",
     html: htmlWrapper(`
-      <div class="title">Welcome to Beyourown CRM, ${esc(params.name)}!</div>
+      <div class="title">Welcome to Beyourown LMS, ${esc(params.name)}!</div>
       <div class="body">
         Your account has been created with the role of <strong>${esc(params.role)}</strong>.
         Please set your password to get started.
       </div>
-      <a href="${esc(params.setupUrl)}" class="btn" style="color:#ffffff;text-decoration:none;">Set My Password</a>
+      <a href="${esc(params.setupUrl)}" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">Set My Password</a>
       <div class="body" style="color: #6b7280; font-size: 13px;">
         This link expires in 7 days. If you did not expect this email, please ignore it.
       </div>
@@ -230,11 +236,11 @@ export async function sendPasswordResetEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Reset your Beyourown CRM password",
+    subject: "Reset your Beyourown LMS password",
     html: htmlWrapper(`
       <div class="title">Password Reset Request</div>
       <div class="body">Hi ${esc(params.name)}, we received a request to reset your password.</div>
-      <a href="${esc(params.resetUrl)}" class="btn" style="color:#ffffff;text-decoration:none;">Reset Password</a>
+      <a href="${esc(params.resetUrl)}" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">Reset Password</a>
       <div class="body" style="color: #6b7280; font-size: 13px;">
         This link expires in 1 hour. If you did not request this, ignore this email.
       </div>
@@ -249,7 +255,7 @@ export async function sendPasswordChangedEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Your Beyourown CRM password has been reset",
+    subject: "Your Beyourown LMS password has been reset",
     html: htmlWrapper(`
       <div class="title">Password Reset by Administrator</div>
       <div class="body">Hi ${esc(params.name)}, your password has been reset by an administrator.</div>
@@ -257,7 +263,7 @@ export async function sendPasswordChangedEmail(params: {
         <strong>New Password:</strong> <code>${esc(params.newPassword)}</code>
       </div>
       <div class="body">Please login and change your password immediately.</div>
-      <a href="${esc(config.frontendUrl)}/login" class="btn" style="color:#ffffff;text-decoration:none;">Login Now</a>
+      <a href="${esc(config.frontendUrl)}/login" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">Login Now</a>
     `),
   });
 }
@@ -268,7 +274,7 @@ export async function sendAccountDeactivatedEmail(params: {
 }): Promise<void> {
   await send({
     to: params.to,
-    subject: "Your Beyourown CRM account has been deactivated",
+    subject: "Your Beyourown LMS account has been deactivated",
     html: htmlWrapper(`
       <div class="title">Account Deactivated</div>
       <div class="body">
@@ -298,7 +304,7 @@ export async function sendLeadAssignedEmail(params: {
         <strong>Lead:</strong> ${esc(displayName)}<br>
         <strong>Phone:</strong> ${esc(params.phone)}
       </div>
-      <a href="${esc(params.leadUrl)}" class="btn" style="color:#ffffff;text-decoration:none;">View Lead</a>
+      <a href="${esc(params.leadUrl)}" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">View Lead</a>
     `),
   });
 }
@@ -323,7 +329,7 @@ export async function sendFollowUpReminderEmail(params: {
         <strong>Phone:</strong> ${esc(params.phone)}<br>
         <strong>Overdue by:</strong> ${esc(params.overdueBy)}
       </div>
-      <a href="${esc(params.leadUrl)}" class="btn" style="color:#ffffff;text-decoration:none;">Update Lead</a>
+      <a href="${esc(params.leadUrl)}" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">Update Lead</a>
     `),
   });
 }
@@ -350,7 +356,7 @@ export async function sendMetaLeadFormEmail(params: {
         ${params.email ? `<strong>Email:</strong> ${esc(params.email)}<br>` : ""}
         ${params.adName ? `<strong>Ad:</strong> ${esc(params.adName)}` : ""}
       </div>
-      <a href="${esc(params.leadUrl)}" class="btn" style="color:#ffffff;text-decoration:none;">View Lead</a>
+      <a href="${esc(params.leadUrl)}" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">View Lead</a>
       <div class="body" style="color: #6b7280; font-size: 13px;">
         Please follow up promptly — Meta leads convert best within the first hour.
       </div>
@@ -484,7 +490,7 @@ export async function sendDailyEmployeeReport(
               : "No activity logged today. Remember to log your calls and interactions."
         }
       </div>
-      <a href="${esc(config.frontendUrl)}/dashboard" class="btn" style="color:#ffffff;text-decoration:none;">
+      <a href="${esc(config.frontendUrl)}/dashboard" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">
         View Dashboard
       </a>
     `),
@@ -551,7 +557,7 @@ export async function sendAdminDailyReport(params: {
         <tbody>${rows}</tbody>
       </table>
 
-      <a href="${esc(config.frontendUrl)}/dashboard" class="btn" style="color:#ffffff;text-decoration:none;">
+      <a href="${esc(config.frontendUrl)}/dashboard" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">
         View Full Dashboard
       </a>
     `),

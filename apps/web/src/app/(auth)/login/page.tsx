@@ -146,17 +146,20 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center">
-          <div className="mb-6 rounded-2xl bg-white/95 p-4 shadow-lg">
+          {/* Wordmark is 1128x206 (5.48:1) with a transparent ground and black
+              letterforms, so it needs a light plate and its real ratio — a
+              square box squashes it to a sliver. */}
+          <div className="mb-6 rounded-xl bg-white/95 px-6 py-4 shadow-lg">
             <Image
               src="/logo.png"
               alt="Beyourown"
-              width={72}
-              height={72}
+              width={1128}
+              height={206}
               priority
-              className="h-16 w-16 object-contain"
+              className="h-8 w-auto"
             />
           </div>
-          <h2 className="text-3xl font-bold text-white mb-3">Beyourown CRM</h2>
+          <h2 className="text-3xl font-bold text-white mb-3">CRM</h2>
           <p className="text-primary-100 text-base max-w-xs leading-relaxed">
             Track, manage, and convert digital marketing leads into
             long-term clients
@@ -186,10 +189,10 @@ export default function LoginPage() {
             <Image
               src="/logo.png"
               alt="Beyourown"
-              width={48}
-              height={48}
+              width={1128}
+              height={206}
               priority
-              className="lg:hidden mb-4 h-12 w-12 object-contain"
+              className="lg:hidden mb-5 h-7 w-auto"
             />
             <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
             <p className="text-sm text-gray-500 mt-1">

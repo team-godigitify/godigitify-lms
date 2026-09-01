@@ -60,7 +60,7 @@ export const config = {
     port: parseInt(optionalEnv("SMTP_PORT", "587"), 10),
     user: optionalEnv("SMTP_USER", ""),
     pass: optionalEnv("SMTP_PASS", ""),
-    from: optionalEnv("SMTP_FROM", "Beyourown CRM <noreply@beyourown.in>"),
+    from: optionalEnv("SMTP_FROM", "Beyourown LMS <noreply@beyourown.in>"),
   },
 
   // Logo shown at the top of transactional emails. Must be a PUBLIC https URL —

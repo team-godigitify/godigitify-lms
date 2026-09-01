@@ -18,7 +18,7 @@ type DayActivity = {
 };
 
 type EmployeeRow = {
-  employee: { id: string; name: string };
+  employee: { id: string; name: string; isActive?: boolean };
   metrics: {
     performanceScore: number;
     totalAssigned: number;
@@ -192,6 +192,14 @@ export function EmployeePerformanceTable() {
                           <span className="text-sm font-medium text-gray-700 whitespace-nowrap">
                             {emp.employee.name}
                           </span>
+                          {emp.employee.isActive === false && (
+                            <span
+                              title="Deactivated account — shown because they have activity in this period"
+                              className="shrink-0 text-[10px] px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 border border-gray-200"
+                            >
+                              Inactive
+                            </span>
+                          )}
                         </div>
                       </td>
                       <td className="py-2.5 pr-4 text-sm text-gray-600">{emp.metrics.totalAssigned}</td>
