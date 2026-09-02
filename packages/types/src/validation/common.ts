@@ -1,13 +1,32 @@
 import { z } from "zod";
+import { isSupportedDialCode } from "../constants/countries";
 
 // ── Indian phone number ──
-// 10 digits, starts with 6, 7, 8, or 9
+// 10 digits, starts with 6, 7, 8, or 9.
+// Still the rule for staff records — employees are hired in India. Leads use
+// the country-aware pair below, since prospects are not.
 export const indianPhone = z
   .string()
   .trim()
   .regex(/^[6-9]\d{9}$/, {
     message: "Enter a valid 10-digit Indian mobile number",
   });
+
+// ── Dial code ──
+// Must be one this build knows about, so a lead can never be saved with a code
+// the UI cannot render back or build a wa.me link from.
+export const dialCode = z
+  .string()
+  .trim()
+  .refine(isSupportedDialCode, { message: "Unsupported country code" });
+
+// ── National significant number ──
+// Digits only; the length rule depends on the dial code, so it is applied by
+// the schema that owns both fields (see lead.ts).
+export const nationalPhone = z
+  .string()
+  .trim()
+  .regex(/^\d{4,15}$/, { message: "Enter a valid phone number" });
 
 // ── Throwaway email domain blocklist ──
 const THROWAWAY_DOMAINS = new Set([

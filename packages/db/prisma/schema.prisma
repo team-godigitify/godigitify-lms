@@ -189,6 +189,11 @@ model Lead {
   phone    String
   altPhone String?
 
+  // Dial code for phone + altPhone, e.g. "+91". Stored rather than derived so
+  // tel:/wa.me links survive changes to the country table. Every row predating
+  // the picker is India, which is why the default backfills to +91.
+  phoneCountryCode String @default("+91")
+
   // Digital presence — mandatory in manual creation UI, nullable for Meta leads
   instagramUrl String?
   websiteUrl   String?

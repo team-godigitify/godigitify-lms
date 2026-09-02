@@ -8,6 +8,7 @@ import type { LeadStatus } from "@lms/types";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
+import { toE164Digits, formatPhone, DEFAULT_DIAL_CODE } from "@lms/types";
 
 dayjs.extend(relativeTime);
 
@@ -16,6 +17,7 @@ type FollowUpLead = {
   nextFollowUpAt: string | number | Date | null;
   name: string | null;
   phone: string;
+  phoneCountryCode?: string | undefined;
   status: LeadStatus;
 };
 
@@ -44,7 +46,7 @@ function LeadRow({
           <StatusBadge status={lead.status as LeadStatus} size="sm" />
         </div>
         <p className="text-xs text-gray-500 mt-0.5">
-          {lead.phone}
+          {formatPhone(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}
           {lead.nextFollowUpAt && (
             <span
               className={cn(
@@ -66,7 +68,7 @@ function LeadRow({
           e.preventDefault();
           e.stopPropagation();
           if (typeof window !== "undefined" && lead.phone) {
-            window.location.href = `tel:${lead.phone}`;
+            window.location.href = `tel:+${toE164Digits(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}`;
           }
         }}
         className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary-50 rounded-lg transition-colors ml-2 shrink-0"

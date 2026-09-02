@@ -30,6 +30,7 @@ export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
       // ── Step 1: Duplicate detection ──
       const existingLeads = await findDuplicateLeads({
         phone: body.phone,
+        phoneCountryCode: body.phoneCountryCode,
         email: body.email ?? null,
         instagramUrl: body.instagramUrl ?? null,
         websiteUrl: body.websiteUrl ?? null,
@@ -164,6 +165,7 @@ export async function createLeadRoute(fastify: FastifyInstance): Promise<void> {
           data: {
             name: body.name ?? null,
             phone: body.phone,
+            phoneCountryCode: body.phoneCountryCode,
             altPhone: body.altPhone ?? null,
             email: body.email?.toLowerCase().trim() ?? null,
             instagramUrl: body.instagramUrl ?? null,

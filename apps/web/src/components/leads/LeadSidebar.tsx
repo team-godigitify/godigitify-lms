@@ -19,6 +19,7 @@ import { canAssignLead } from "@lms/auth";
 import { Role, type Lead } from "@lms/types";
 import { useUpdateLead } from "@/hooks/useLeadDetail";
 import { cn } from "@/lib/utils";
+import { toE164Digits, formatPhone, DEFAULT_DIAL_CODE } from "@lms/types";
 
 dayjs.extend(relativeTime);
 
@@ -215,14 +216,14 @@ export function LeadSidebar({ lead, onOpenClientDeal }: { lead: Lead; onOpenClie
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <a
-              href={`tel:${lead.phone}`}
+              href={`tel:+${toE164Digits(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}`}
               className="flex items-center gap-2.5 text-sm text-gray-600 hover:text-primary transition-colors flex-1"
             >
               <Phone size={14} className="text-gray-400" />
-              {lead.phone}
+              {formatPhone(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}
             </a>
             <a
-              href={`https://wa.me/91${(lead.phone).replace(/\D/g, "")}`}
+              href={`https://wa.me/${toE164Digits(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}`}
               target="_blank"
               rel="noopener noreferrer"
               title={`WhatsApp ${lead.phone}`}

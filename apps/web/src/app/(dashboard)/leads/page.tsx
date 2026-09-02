@@ -32,6 +32,7 @@ import api from "@/lib/api";
 import { extractApiError } from "@/lib/utils";
 import type { LeadFilters as Filters, LeadSummary } from "@/hooks/useLeads";
 import { cn } from "@/lib/utils";
+import { toE164Digits, formatPhone, DEFAULT_DIAL_CODE } from "@lms/types";
 
 const DEFAULT_FILTERS: Filters = {
   page: 1,
@@ -613,7 +614,7 @@ function LeadTableWithBulk({
                         )}
                       </div>
                       <p className="text-xs text-gray-500 mt-0.5">
-                        {lead.phone}
+                        {formatPhone(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}
                       </p>
                     </Link>
                   </td>
@@ -652,7 +653,7 @@ function LeadTableWithBulk({
                   </td>
                   <td className="px-4 py-3">
                     <a
-                      href={`tel:${lead.phone}`}
+                      href={`tel:+${toE164Digits(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}`}
                       className="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-primary-50 transition-colors inline-block"
                       aria-label={`Call ${lead.name ?? lead.phone}`}
                       title={`Call ${lead.name ?? lead.phone}`}

@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { indianPhone, optionalEmail, dateString } from "./common";
+import { dialCode, nationalPhone, optionalEmail, dateString } from "./common";
+import { DEFAULT_DIAL_CODE, isValidNationalNumber, nationalNumberError } from "../constants/countries";
 import { LeadStatus, LeadPriority } from "../enums";
 
 // ── Instagram URL validator ──
@@ -39,9 +40,13 @@ export const CreateLeadSchema = z.object({
     .max(200)
     .optional(),
 
-  // Required contact
-  phone: indianPhone,
-  altPhone: indianPhone.optional(),
+  // Required contact. The dial code decides how many digits `phone` needs, so
+  // the length rule lives in the superRefine below rather than on the field.
+  // Defaults to India: Meta/WhatsApp webhooks and older clients post a bare
+  // 10-digit number with no country at all.
+  phoneCountryCode: dialCode.default(DEFAULT_DIAL_CODE),
+  phone: nationalPhone,
+  altPhone: nationalPhone.optional(),
 
   // Digital presence — optional at API level (Meta leads may arrive without)
   instagramUrl: instagramUrl.optional(),
@@ -71,6 +76,23 @@ export const CreateLeadSchema = z.object({
   // Revival confirmation for LOST leads
   confirmRevival: z.boolean().optional(),
   revivalLeadId: z.string().cuid().optional(),
+}).superRefine((data, ctx) => {
+  const dial = data.phoneCountryCode ?? DEFAULT_DIAL_CODE;
+  if (!isValidNationalNumber(dial, data.phone)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["phone"],
+      message: nationalNumberError(dial),
+    });
+  }
+  // The alternate number shares the lead's country — one picker, two fields.
+  if (data.altPhone && !isValidNationalNumber(dial, data.altPhone)) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["altPhone"],
+      message: nationalNumberError(dial),
+    });
+  }
 });
 
 // ── Update Lead — all optional ──
@@ -82,7 +104,8 @@ export const UpdateLeadSchema = z.object({
     .min(1, "Name cannot be empty if provided")
     .max(200)
     .optional(),
-  altPhone: indianPhone.optional(),
+  phoneCountryCode: dialCode.optional(),
+  altPhone: nationalPhone.optional(),
   instagramUrl: instagramUrl.optional(),
   websiteUrl: websiteUrl.optional(),
   email: optionalEmail,

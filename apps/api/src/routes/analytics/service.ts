@@ -946,6 +946,7 @@ export async function getLeadsAtRisk(params: {
       id: true,
       name: true,
       phone: true,
+      phoneCountryCode: true,
       status: true,
       leadScore: true,
       leadPriority: true,

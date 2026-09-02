@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { LeadStatus } from "@lms/types";
+import { LeadStatus, DEFAULT_DIAL_CODE } from "@lms/types";
 import { checkDuplicate, buildDuplicateContinuation } from "@lms/core";
 import { findDuplicateLeads } from "../routes/leads/service";
 import { QUEUES } from "../plugins/bullmq";
@@ -231,6 +231,10 @@ export async function createLeadFromMeta(
         data: {
           name: data.name ?? null,
           phone: data.phone,
+          // Meta Instant Forms and the WhatsApp webhook are both wired to Indian
+          // ad accounts, and their normalizers already reject anything that is
+          // not a 10-digit Indian number.
+          phoneCountryCode: DEFAULT_DIAL_CODE,
           email: data.email ?? null,
           instagramUrl: data.instagramUrl ?? null,
           websiteUrl: data.websiteUrl ?? null,

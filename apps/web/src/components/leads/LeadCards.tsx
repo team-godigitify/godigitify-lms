@@ -19,6 +19,7 @@ import { useAuthStore } from "@/store/auth";
 import { Role } from "@lms/types";
 import type { LeadSummary } from "@/hooks/useLeads";
 import { cn } from "@/lib/utils";
+import { toE164Digits, formatPhone, DEFAULT_DIAL_CODE } from "@lms/types";
 
 dayjs.extend(relativeTime);
 
@@ -82,7 +83,7 @@ export function LeadCards({
                   <p className="text-sm font-semibold text-gray-900 hover:text-primary truncate">
                     {lead.name ?? lead.phone}
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">{lead.phone}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{formatPhone(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}</p>
                 </Link>
 
                 <StatusBadge status={lead.status} size="sm" />
@@ -125,13 +126,13 @@ export function LeadCards({
               {/* Quick actions */}
               <div className="flex flex-wrap items-center gap-1 pt-1 border-t border-surface-100">
                 <a
-                  href={`tel:${lead.phone}`}
+                  href={`tel:+${toE164Digits(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}`}
                   className="flex-1 min-w-17 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-primary hover:bg-primary-50"
                 >
                   <Phone size={13} /> Call
                 </a>
                 <a
-                  href={`https://wa.me/91${lead.phone.replace(/\D/g, "")}`}
+                  href={`https://wa.me/${toE164Digits(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex-1 min-w-17 flex items-center justify-center gap-1 py-1.5 rounded-lg text-xs text-gray-500 hover:text-[#25D366] hover:bg-green-50"

@@ -7,6 +7,7 @@ export type LeadSummary = {
   id: string;
   name: string | null;
   phone: string;
+  phoneCountryCode?: string | undefined;
   email: string | null;
   status: LeadStatus;
   industry: string | null;

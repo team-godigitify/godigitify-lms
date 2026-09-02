@@ -3,6 +3,12 @@ import { authenticate } from "../../middleware/authenticate";
 import { authorize } from "../../middleware/authorize";
 import { canUpdateLead } from "@lms/auth";
 import { Role } from "@lms/types";
+import {
+  DEFAULT_DIAL_CODE,
+  isSupportedDialCode,
+  isValidNationalNumber,
+  nationalNumberError,
+} from "@lms/types";
 import { leadListRoute } from "./list";
 import { createLeadRoute } from "./create";
 import { leadDetailRoute } from "./detail";
@@ -26,22 +32,41 @@ export async function leadRoutes(fastify: FastifyInstance): Promise<void> {
   await fastify.register(leadFollowUpsRoute);
   await fastify.register(bulkLeadRoutes);
 
-  // GET /leads/check-duplicate?phone=XXXXXXXXXX
+  // GET /leads/check-duplicate?phone=XXXXXXXXXX&countryCode=%2B91
   fastify.get(
     "/check-duplicate",
     { preHandler: authenticate },
     async (request, reply) => {
-      const { phone } = request.query as { phone?: string };
-      if (!phone || !/^[6-9]\d{9}$/.test(phone)) {
+      const { phone, countryCode } = request.query as {
+        phone?: string;
+        countryCode?: string;
+      };
+      // Omitted country means India — the form's default, and what every
+      // caller sent before the picker existed.
+      const dial = countryCode?.trim() || DEFAULT_DIAL_CODE;
+      if (!isSupportedDialCode(dial)) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: "INVALID_COUNTRY_CODE",
+            message: "Unsupported country code",
+          },
+        });
+      }
+      if (!phone || !isValidNationalNumber(dial, phone)) {
         return reply.status(400).send({
           success: false,
           error: {
             code: "INVALID_PHONE",
-            message: "Provide a valid 10-digit Indian mobile number",
+            message: nationalNumberError(dial),
           },
         });
       }
-      const leads = await findDuplicateLeads({ phone, prisma: fastify.prisma });
+      const leads = await findDuplicateLeads({
+        phone,
+        phoneCountryCode: dial,
+        prisma: fastify.prisma,
+      });
       return reply.status(200).send({ success: true, data: { leads } });
     },
   );
@@ -254,6 +279,10 @@ export async function leadRoutes(fastify: FastifyInstance): Promise<void> {
             data: {
               name: row.name ?? null,
               phone,
+              // CSV import stays India-only: normalizeImportPhone above strips a
+              // leading 91 and enforces the 10-digit rule, so there is no other
+              // country a row could belong to.
+              phoneCountryCode: DEFAULT_DIAL_CODE,
               altPhone: row.altPhone ?? null,
               email: row.email?.toLowerCase().trim() ?? null,
               instagramUrl: row.instagramUrl ?? null,

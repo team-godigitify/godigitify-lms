@@ -10,23 +10,13 @@ import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
 import { LeadPriority } from "@lms/types";
-
-const INDUSTRIES = [
-  "E-commerce",
-  "Real Estate",
-  "Education",
-  "Healthcare",
-  "Restaurant / Food",
-  "Fashion & Apparel",
-  "Beauty & Wellness",
-  "Travel & Hospitality",
-  "Finance & Insurance",
-  "Technology / SaaS",
-  "Manufacturing",
-  "Retail",
-  "NGO / Non-profit",
-  "Other",
-];
+import { INDUSTRIES } from "@/lib/industries";
+import { PhoneField } from "@/components/ui/PhoneField";
+import {
+  DEFAULT_DIAL_CODE,
+  isValidNationalNumber,
+  nationalNumberError,
+} from "@lms/types";
 
 export default function EditLeadPage() {
   const { id } = useParams<{ id: string }>();
@@ -35,6 +25,7 @@ export default function EditLeadPage() {
   const updateLead = useUpdateLead(id);
 
   const [form, setForm] = useState({
+    phoneCountryCode: DEFAULT_DIAL_CODE,
     phone: "",
     altPhone: "",
     name: "",
@@ -63,6 +54,8 @@ export default function EditLeadPage() {
   useEffect(() => {
     if (!lead) return;
     setForm({
+      // Leads created before the picker have no stored code; they are Indian.
+      phoneCountryCode: (lead as any).phoneCountryCode ?? DEFAULT_DIAL_CODE,
       phone: lead.phone ?? "",
       altPhone: (lead as any).altPhone ?? "",
       name: (lead as any).name ?? "",
@@ -93,10 +86,12 @@ export default function EditLeadPage() {
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!form.phone.match(/^[6-9]\d{9}$/))
-      errs["phone"] = "Enter valid 10-digit Indian number";
-    if (form.altPhone && !/^[6-9]\d{9}$/.test(form.altPhone))
-      errs["altPhone"] = "Enter valid 10-digit Indian mobile number";
+    // The number itself is locked, but switching the country can still strand
+    // it — an Indian 10-digit number is not a valid 8-digit Singapore one.
+    if (!isValidNationalNumber(form.phoneCountryCode, form.phone))
+      errs["phone"] = `Saved number does not match this country. ${nationalNumberError(form.phoneCountryCode)}`;
+    if (form.altPhone && !isValidNationalNumber(form.phoneCountryCode, form.altPhone))
+      errs["altPhone"] = nationalNumberError(form.phoneCountryCode);
     setErrors(errs);
     return Object.keys(errs).length === 0;
   }
@@ -105,7 +100,9 @@ export default function EditLeadPage() {
     e.preventDefault();
     if (!validate()) return;
 
-    const payload: Record<string, unknown> = { phone: form.phone };
+    const payload: Record<string, unknown> = {
+      phoneCountryCode: form.phoneCountryCode,
+    };
     if (form.name) payload["name"] = form.name;
     if (form.altPhone) payload["altPhone"] = form.altPhone;
     if (form.email) payload["email"] = form.email;
@@ -168,15 +165,16 @@ export default function EditLeadPage() {
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
             Basic Information
           </p>
-          <Input
+          <PhoneField
             label="Mobile Number"
             required
-            placeholder="10-digit mobile number"
+            dial={form.phoneCountryCode}
+            onDialChange={(dial) => set("phoneCountryCode", dial)}
             value={form.phone}
-            onChange={(e) => set("phone", e.target.value)}
+            onValueChange={(v) => set("phone", v)}
             error={errors["phone"]}
-            maxLength={10}
-            inputMode="numeric"
+            helperText="Number is the duplicate-detection key and cannot be changed; the country code can."
+            numberDisabled
           />
           <Input
             label="Contact Name"
@@ -184,14 +182,15 @@ export default function EditLeadPage() {
             value={form.name}
             onChange={(e) => set("name", e.target.value)}
           />
-          <Input
+          <PhoneField
             label="Alt Number"
-            type="tel"
-            placeholder="e.g. 9876543210"
+            dial={form.phoneCountryCode}
+            onDialChange={(dial) => set("phoneCountryCode", dial)}
             value={form.altPhone}
-            onChange={(e) => set("altPhone", e.target.value.replace(/\D/g, ""))}
-            maxLength={10}
-            inputMode="numeric"
+            onValueChange={(v) => set("altPhone", v)}
+            error={errors["altPhone"]}
+            helperText="Alternative number (optional)"
+            dialDisabled
           />
           <Input
             label="Email"

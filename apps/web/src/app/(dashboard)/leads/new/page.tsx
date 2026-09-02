@@ -12,23 +12,13 @@ import { useNotifications } from "@/store/notifications";
 import { useQuery } from "@tanstack/react-query";
 import { extractApiError } from "@/lib/utils";
 import { LeadPriority } from "@lms/types";
-
-const INDUSTRIES = [
-  "E-commerce",
-  "Real Estate",
-  "Education",
-  "Healthcare",
-  "Restaurant / Food",
-  "Fashion & Apparel",
-  "Beauty & Wellness",
-  "Travel & Hospitality",
-  "Finance & Insurance",
-  "Technology / SaaS",
-  "Manufacturing",
-  "Retail",
-  "NGO / Non-profit",
-  "Other",
-];
+import { INDUSTRIES } from "@/lib/industries";
+import { PhoneField } from "@/components/ui/PhoneField";
+import {
+  DEFAULT_DIAL_CODE,
+  isValidNationalNumber,
+  nationalNumberError,
+} from "@lms/types";
 
 export default function NewLeadPage() {
   const router = useRouter();
@@ -44,6 +34,9 @@ export default function NewLeadPage() {
   } | null>(null);
 
   const [form, setForm] = useState({
+    // One country for both numbers — a lead's alternate line is in the same
+    // country as their main one in every case we have seen.
+    phoneCountryCode: DEFAULT_DIAL_CODE,
     phone: "",
     altPhone: "",
     name: "",
@@ -74,7 +67,7 @@ export default function NewLeadPage() {
 
   useEffect(() => {
     if (phoneTimerRef.current) clearTimeout(phoneTimerRef.current);
-    if (!form.phone.match(/^[6-9]\d{9}$/)) {
+    if (!isValidNationalNumber(form.phoneCountryCode, form.phone)) {
       setDuplicateLead(null);
       setCheckingDuplicate(false);
       return;
@@ -82,7 +75,9 @@ export default function NewLeadPage() {
     setCheckingDuplicate(true);
     phoneTimerRef.current = setTimeout(async () => {
       try {
-        const { data } = await api.get(`/leads/check-duplicate?phone=${form.phone}`);
+        const { data } = await api.get(
+          `/leads/check-duplicate?phone=${form.phone}&countryCode=${encodeURIComponent(form.phoneCountryCode)}`,
+        );
         const leads = data?.data?.leads as
           | Array<{ id: string; name: string | null; phone: string; status: string; isDuplicate: boolean }>
           | undefined;
@@ -98,7 +93,7 @@ export default function NewLeadPage() {
         setCheckingDuplicate(false);
       }
     }, 400);
-  }, [form.phone]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [form.phone, form.phoneCountryCode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const { data: sources } = useQuery({
     queryKey: ["lead-sources"],
@@ -126,10 +121,10 @@ export default function NewLeadPage() {
 
   function validate() {
     const errs: Record<string, string> = {};
-    if (!form.phone.match(/^[6-9]\d{9}$/))
-      errs["phone"] = "Enter valid 10-digit Indian mobile number (starts with 6–9)";
-    if (form.altPhone && !/^[6-9]\d{9}$/.test(form.altPhone))
-      errs["altPhone"] = "Enter valid 10-digit Indian mobile number";
+    if (!isValidNationalNumber(form.phoneCountryCode, form.phone))
+      errs["phone"] = nationalNumberError(form.phoneCountryCode);
+    if (form.altPhone && !isValidNationalNumber(form.phoneCountryCode, form.altPhone))
+      errs["altPhone"] = nationalNumberError(form.phoneCountryCode);
     if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email))
       errs["email"] = "Enter a valid email address";
     if (form.nextFollowUpAt && new Date(form.nextFollowUpAt) <= new Date())
@@ -147,6 +142,7 @@ export default function NewLeadPage() {
       const isProfileComplete = !!(form.instagramUrl && form.websiteUrl);
       const payload: Record<string, unknown> = {
         phone: form.phone,
+        phoneCountryCode: form.phoneCountryCode,
         isProfileComplete,
       };
       if (form.name) payload["name"] = form.name;
@@ -216,17 +212,14 @@ export default function NewLeadPage() {
           <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Contact</p>
 
           <div className="space-y-2">
-            <Input
+            <PhoneField
               label="Mobile Number"
               required
-              type="tel"
-              placeholder="e.g. 9876543210"
+              dial={form.phoneCountryCode}
+              onDialChange={(dial) => set("phoneCountryCode", dial)}
               value={form.phone}
-              onChange={(e) => set("phone", e.target.value.replace(/\D/g, ""))}
+              onValueChange={(v) => set("phone", v)}
               error={errors["phone"]}
-              helperText={!errors["phone"] ? "10-digit Indian number" : undefined}
-              maxLength={10}
-              inputMode="numeric"
             />
             {checkingDuplicate && (
               <div className="flex items-center gap-1.5 text-xs text-gray-400">
@@ -281,16 +274,15 @@ export default function NewLeadPage() {
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
               />
-              <Input
+              <PhoneField
                 label="Alt Number"
-                type="tel"
-                placeholder="e.g. 9876543210"
+                dial={form.phoneCountryCode}
+                onDialChange={(dial) => set("phoneCountryCode", dial)}
                 value={form.altPhone}
-                onChange={(e) => set("altPhone", e.target.value.replace(/\D/g, ""))}
+                onValueChange={(v) => set("altPhone", v)}
                 error={errors["altPhone"]}
-                helperText={!errors["altPhone"] ? "Alternative 10-digit number (optional)" : undefined}
-                maxLength={10}
-                inputMode="numeric"
+                helperText="Alternative number (optional)"
+                dialDisabled
               />
               <Input
                 label="Email"

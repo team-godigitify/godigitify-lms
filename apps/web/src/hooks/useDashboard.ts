@@ -105,6 +105,7 @@ export type LeadAtRisk = {
   id: string;
   name: string | null;
   phone: string;
+  phoneCountryCode?: string | undefined;
   status: string;
   leadScore: number | null;
   leadPriority: string;

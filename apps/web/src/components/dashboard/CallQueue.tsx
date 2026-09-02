@@ -6,6 +6,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import { useMyFollowUps, useLeadsAtRisk } from "@/hooks/useDashboard";
 import { cn } from "@/lib/utils";
+import { toE164Digits, DEFAULT_DIAL_CODE } from "@lms/types";
 
 dayjs.extend(relativeTime);
 
@@ -15,6 +16,7 @@ type QueueRow = {
   id: string;
   name: string | null;
   phone: string;
+  phoneCountryCode?: string | undefined;
   reason: QueueReason;
   detail: string;
 };
@@ -34,7 +36,7 @@ export function CallQueue() {
 
   const isLoading = followUpsLoading || atRiskLoading;
 
-  type FollowUpLead = { id: string; name: string | null; phone: string; nextFollowUpAt: string | null };
+  type FollowUpLead = { id: string; name: string | null; phone: string; phoneCountryCode?: string | undefined; nextFollowUpAt: string | null };
   const overdue = ((followUps as { overdue?: FollowUpLead[] } | undefined)?.overdue ?? []);
   const upcoming = ((followUps as { upcoming?: FollowUpLead[] } | undefined)?.upcoming ?? []);
   const todayStr = dayjs().format("YYYY-MM-DD");
@@ -50,6 +52,7 @@ export function CallQueue() {
       id: l.id,
       name: l.name,
       phone: l.phone,
+      phoneCountryCode: l.phoneCountryCode,
       reason: "overdue" as const,
       detail: l.nextFollowUpAt ? `Overdue ${dayjs(l.nextFollowUpAt).fromNow(true)}` : "Overdue",
     })),
@@ -57,6 +60,7 @@ export function CallQueue() {
       id: l.id,
       name: l.name,
       phone: l.phone,
+      phoneCountryCode: l.phoneCountryCode,
       reason: "hot" as const,
       detail: `Score ${l.leadScore} · gone quiet`,
     })),
@@ -66,6 +70,7 @@ export function CallQueue() {
         id: l.id,
         name: l.name,
         phone: l.phone,
+        phoneCountryCode: l.phoneCountryCode,
         reason: "today" as const,
         detail: l.nextFollowUpAt ? `Due ${dayjs(l.nextFollowUpAt).fromNow()}` : "Due today",
       })),
@@ -115,7 +120,7 @@ export function CallQueue() {
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    if (typeof window !== "undefined") window.location.href = `tel:${row.phone}`;
+                    if (typeof window !== "undefined") window.location.href = `tel:+${toE164Digits(row.phoneCountryCode ?? DEFAULT_DIAL_CODE, row.phone)}`;
                   }}
                   className="p-1.5 text-gray-400 hover:text-primary hover:bg-primary-50 rounded-lg transition-colors shrink-0"
                   aria-label={`Call ${row.name ?? row.phone}`}

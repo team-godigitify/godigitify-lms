@@ -15,6 +15,7 @@ import { StatusBadge } from "@/components/leads/StatusBadge";
 import { LeadPriority, LeadStatus, Role } from "@lms/types";
 import { useAuthStore } from "@/store/auth";
 import { cn } from "@/lib/utils";
+import { toE164Digits, DEFAULT_DIAL_CODE } from "@lms/types";
 
 // Some leads (CSV imports, Meta lead forms) store URLs without a protocol
 // (e.g. "business.com"), which browsers treat as a relative path — resolving
@@ -396,7 +397,7 @@ export default function LeadDetailPage() {
               )}
 
               <a
-                href={`https://wa.me/91${lead.phone.replace(/\D/g, "")}`}
+                href={`https://wa.me/${toE164Digits(lead.phoneCountryCode ?? DEFAULT_DIAL_CODE, lead.phone)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-green-500 hover:bg-green-600 text-white text-xs font-semibold transition-colors"

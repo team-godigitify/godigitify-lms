@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { authenticate } from "../../middleware/authenticate";
 import { canUpdateLead } from "@lms/auth";
 import { Role, UpdateLeadSchema } from "@lms/types";
+import { isValidNationalNumber, nationalNumberError } from "@lms/types";
 import { validateBody } from "../../middleware/validate";
 import { recomputeLeadScore } from "../../services/leadScoring";
 
@@ -23,6 +24,7 @@ export async function updateLeadRoute(fastify: FastifyInstance): Promise<void> {
           createdBy: { select: { id: true } },
           branchId: true,
           status: true,
+          phoneCountryCode: true,
         },
       });
 
@@ -56,6 +58,21 @@ export async function updateLeadRoute(fastify: FastifyInstance): Promise<void> {
         return reply.status(400).send({ success: false, ...validation.error });
       }
       const body = validation.data;
+
+      // altPhone's length rule depends on the country, and the schema cannot
+      // see it on a partial update — the code may be staying as stored rather
+      // than arriving in the payload.
+      const dial = body.phoneCountryCode ?? lead.phoneCountryCode;
+      if (body.altPhone && !isValidNationalNumber(dial, body.altPhone)) {
+        return reply.status(400).send({
+          success: false,
+          error: {
+            code: "VALIDATION_ERROR",
+            message: nationalNumberError(dial),
+            details: [{ field: "altPhone", message: nationalNumberError(dial) }],
+          },
+        });
+      }
 
       // Pull out fields that must not reach lead.update()
       const {

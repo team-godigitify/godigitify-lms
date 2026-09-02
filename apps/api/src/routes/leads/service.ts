@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@lms/db'
 import type { LeadStatus, LeadPriority, Role } from '@lms/types'
+import { DEFAULT_DIAL_CODE } from '@lms/types'
 
 function toDateRangeStart(value: string): Date {
   return new Date(`${value}T00:00:00.000Z`)
@@ -14,6 +15,7 @@ export const leadSummarySelect = {
   id: true,
   name: true,
   phone: true,
+  phoneCountryCode: true,
   altPhone: true,
   email: true,
   status: true,
@@ -191,13 +193,22 @@ export function buildLeadWhereClause(params: {
 // Core checkDuplicate then applies JS-level URL normalization.
 export async function findDuplicateLeads(params: {
   phone: string
+  /** Dial code the number belongs to; defaults to India for callers that predate the picker. */
+  phoneCountryCode?: string | null
   email?: string | null
   instagramUrl?: string | null
   websiteUrl?: string | null
   prisma: PrismaClient
 }) {
   const emailLower = params.email?.toLowerCase().trim() || null
-  const orClauses: Array<Record<string, unknown>> = [{ phone: params.phone }]
+  // The national number alone is not an identity — +1 2015550123 and
+  // +91 2015550123 are different people — so the phone clause matches the pair.
+  const orClauses: Array<Record<string, unknown>> = [
+    {
+      phone: params.phone,
+      phoneCountryCode: params.phoneCountryCode ?? DEFAULT_DIAL_CODE,
+    },
+  ]
 
   if (emailLower) {
     orClauses.push({ email: { equals: emailLower, mode: 'insensitive' as const } })
@@ -214,6 +225,7 @@ export async function findDuplicateLeads(params: {
     select: {
       id: true,
       phone: true,
+      phoneCountryCode: true,
       email: true,
       instagramUrl: true,
       websiteUrl: true,

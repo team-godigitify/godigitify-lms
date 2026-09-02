@@ -9,6 +9,8 @@ export type Lead = {
   id: string;
   name: string | null;
   phone: string;
+  /** Dial code for `phone`/`altPhone`, e.g. "+91". */
+  phoneCountryCode: string;
   altPhone: string | null;
   instagramUrl: string | null;
   websiteUrl: string | null;
@@ -49,6 +51,8 @@ export type LeadSummary = {
   id: string;
   name: string | null;
   phone: string;
+  /** Dial code for `phone`/`altPhone`, e.g. "+91". */
+  phoneCountryCode: string;
   altPhone: string | null;
   instagramUrl: string | null;
   isProfileComplete: boolean;
