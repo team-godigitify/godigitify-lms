@@ -281,14 +281,14 @@ export async function getEmployeePerformance(params: {
 
   const branchFilter = branchId ? { branchId } : {};
 
-  // Fetch employees — optionally scoped to a single employee.
+  // Fetch staff users — optionally scoped to a single employee.
   // Deactivated employees are pulled in too, then dropped below unless they
   // actually contributed in this period. Excluding them outright silently
   // erased the history of anyone who left, making past periods under-report.
   const employees = await prisma.user.findMany({
     where: {
       ...branchFilter,
-      role: "EMPLOYEE",
+      role: { in: ["SUB_ADMIN", "EMPLOYEE"] },
       ...(params.employeeId ? { id: params.employeeId } : {}),
     },
     select: { id: true, name: true, email: true, isActive: true },
