@@ -109,7 +109,10 @@ export async function getDashboardOverview(params: {
 
     // Sum of estimated deal size across all currently-open leads
     prisma.lead.aggregate({
-      where: { ...branchFilter, status: { notIn: ["CLIENT", "DUPLICATE", "LOST"] } },
+      where: {
+        ...branchFilter,
+        status: { notIn: ["CLIENT", "DUPLICATE", "LOST"] },
+      },
       _sum: { dealSizeEstimate: true },
     }),
   ]);
@@ -157,7 +160,11 @@ export async function getEmployeeCallLog(params: {
   pageSize?: number;
 }) {
   const { prisma, employeeId } = params;
-  const { from, to } = getDateRange(params.period, params.dateFrom, params.dateTo);
+  const { from, to } = getDateRange(
+    params.period,
+    params.dateFrom,
+    params.dateTo,
+  );
   const page = Math.max(1, params.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
 
@@ -187,7 +194,13 @@ export async function getEmployeeCallLog(params: {
     prisma.interactionLog.count({ where }),
   ]);
 
-  return { calls, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  return {
+    calls,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 // ═══════════════════════════════════════
@@ -208,7 +221,11 @@ export async function getEmployeeInteractedLeads(params: {
   pageSize?: number;
 }) {
   const { prisma, employeeId } = params;
-  const { from, to } = getDateRange(params.period, params.dateFrom, params.dateTo);
+  const { from, to } = getDateRange(
+    params.period,
+    params.dateFrom,
+    params.dateTo,
+  );
   const page = Math.max(1, params.page ?? 1);
   const pageSize = Math.min(100, Math.max(1, params.pageSize ?? 20));
 
@@ -232,7 +249,12 @@ export async function getEmployeeInteractedLeads(params: {
   // interaction since the query is already sorted desc.
   const byLead = new Map<
     string,
-    { lead: (typeof interactions)[number]["lead"]; lastInteractionAt: Date; interactionCount: number; callCount: number }
+    {
+      lead: (typeof interactions)[number]["lead"];
+      lastInteractionAt: Date;
+      interactionCount: number;
+      callCount: number;
+    }
   >();
   for (const i of interactions) {
     const existing = byLead.get(i.leadId);
@@ -256,7 +278,13 @@ export async function getEmployeeInteractedLeads(params: {
   const start = (page - 1) * pageSize;
   const pageLeads = leads.slice(start, start + pageSize);
 
-  return { leads: pageLeads, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  return {
+    leads: pageLeads,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
 }
 
 // ═══════════════════════════════════════
@@ -299,84 +327,89 @@ export async function getEmployeePerformance(params: {
   const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   const employeeIds = employees.map((e) => e.id);
 
-  const [allLeads, allInteractions, overdueLeads, allEmployeeInteractions, last7DayInteractions] =
-    await Promise.all([
-      prisma.lead.findMany({
-        where: {
-          ...branchFilter,
+  const [
+    allLeads,
+    allInteractions,
+    overdueLeads,
+    allEmployeeInteractions,
+    last7DayInteractions,
+  ] = await Promise.all([
+    prisma.lead.findMany({
+      where: {
+        ...branchFilter,
+        assignedToId: { in: employeeIds },
+        createdAt: { gte: from, lte: to },
+      },
+      select: {
+        id: true,
+        assignedToId: true,
+        status: true,
+        confirmedAt: true,
+        createdAt: true,
+        nextFollowUpAt: true,
+        clientDeal: { select: { dealValue: true } },
+      },
+    }),
+
+    // First interaction per lead — for response time calculation
+    prisma.interactionLog.findMany({
+      where: {
+        lead: {
           assignedToId: { in: employeeIds },
           createdAt: { gte: from, lte: to },
         },
-        select: {
-          id: true,
-          assignedToId: true,
-          status: true,
-          confirmedAt: true,
-          createdAt: true,
-          nextFollowUpAt: true,
-          clientDeal: { select: { dealValue: true } },
-        },
-      }),
+        type: { not: "STATUS_CHANGED" },
+        isDeleted: false,
+      },
+      select: { id: true, leadId: true, userId: true, createdAt: true },
+      orderBy: { createdAt: "asc" },
+    }),
 
-      // First interaction per lead — for response time calculation
-      prisma.interactionLog.findMany({
-        where: {
-          lead: {
-            assignedToId: { in: employeeIds },
-            createdAt: { gte: from, lte: to },
-          },
-          type: { not: "STATUS_CHANGED" },
-          isDeleted: false,
-        },
-        select: { id: true, leadId: true, userId: true, createdAt: true },
-        orderBy: { createdAt: "asc" },
-      }),
+    // Leads with overdue follow-ups per employee
+    prisma.lead.findMany({
+      where: {
+        ...branchFilter,
+        assignedToId: { in: employeeIds },
+        nextFollowUpAt: { lte: new Date() },
+        status: { notIn: ["CLIENT", "DUPLICATE", "LOST"] },
+      },
+      select: { assignedToId: true },
+    }),
 
-      // Leads with overdue follow-ups per employee
-      prisma.lead.findMany({
-        where: {
-          ...branchFilter,
-          assignedToId: { in: employeeIds },
-          nextFollowUpAt: { lte: new Date() },
-          status: { notIn: ["CLIENT", "DUPLICATE", "LOST"] },
-        },
-        select: { assignedToId: true },
-      }),
+    // All interactions BY employee during period — for call/engagement stats
+    prisma.interactionLog.findMany({
+      where: {
+        userId: { in: employeeIds },
+        createdAt: { gte: from, lte: to },
+        isDeleted: false,
+        type: { not: "STATUS_CHANGED" },
+      },
+      select: {
+        userId: true,
+        leadId: true,
+        type: true,
+        callDurationSecs: true,
+        createdAt: true,
+      },
+    }),
 
-      // All interactions BY employee during period — for call/engagement stats
-      prisma.interactionLog.findMany({
-        where: {
-          userId: { in: employeeIds },
-          createdAt: { gte: from, lte: to },
-          isDeleted: false,
-          type: { not: "STATUS_CHANGED" },
-        },
-        select: {
-          userId: true,
-          leadId: true,
-          type: true,
-          callDurationSecs: true,
-          createdAt: true,
-        },
-      }),
-
-      // Last 7 days interactions for daily activity chart (always fixed window)
-      prisma.interactionLog.findMany({
-        where: {
-          userId: { in: employeeIds },
-          createdAt: { gte: sevenDaysAgo },
-          isDeleted: false,
-          type: { not: "STATUS_CHANGED" },
-        },
-        select: {
-          userId: true,
-          leadId: true,
-          type: true,
-          callDurationSecs: true,
-          createdAt: true,
-        },
-      }),
-    ]);
+    // Last 7 days interactions for daily activity chart (always fixed window)
+    prisma.interactionLog.findMany({
+      where: {
+        userId: { in: employeeIds },
+        createdAt: { gte: sevenDaysAgo },
+        isDeleted: false,
+        type: { not: "STATUS_CHANGED" },
+      },
+      select: {
+        userId: true,
+        leadId: true,
+        type: true,
+        callDurationSecs: true,
+        createdAt: true,
+      },
+    }),
+  ]);
 
   // Process in JS — group by employee
   const metrics = employees.map((employee) => {
@@ -384,9 +417,7 @@ export async function getEmployeePerformance(params: {
       (l) => l.assignedToId === employee.id,
     );
     const totalAssigned = employeeLeads.length;
-    const confirmed = employeeLeads.filter(
-      (l) => l.status === "CLIENT",
-    ).length;
+    const confirmed = employeeLeads.filter((l) => l.status === "CLIENT").length;
     const lost = employeeLeads.filter((l) => l.status === "LOST").length;
     const revenueClosed = employeeLeads
       .filter((l) => l.status === "CLIENT")
@@ -513,7 +544,9 @@ export async function getEmployeePerformance(params: {
   );
 
   // Sort by performance score descending — worst performers at bottom
-  visible.sort((a, b) => b.metrics.performanceScore - a.metrics.performanceScore);
+  visible.sort(
+    (a, b) => b.metrics.performanceScore - a.metrics.performanceScore,
+  );
 
   return { employees: visible, period: { from, to } };
 }
@@ -641,8 +674,7 @@ export async function getSourceReport(params: {
     const key = row.sourceId ?? "unknown";
     if (!sourceMap[key]) sourceMap[key] = { total: 0, confirmed: 0, lost: 0 };
     sourceMap[key]!.total += row._count._all;
-    if (row.status === "CLIENT")
-      sourceMap[key]!.confirmed += row._count._all;
+    if (row.status === "CLIENT") sourceMap[key]!.confirmed += row._count._all;
     if (row.status === "LOST") sourceMap[key]!.lost += row._count._all;
   }
 
@@ -724,9 +756,14 @@ export async function getCampaignPerformance(params: {
         0,
       );
       const spend = Number(c.spend ?? 0);
-      const roi = spend > 0 ? Math.round(((revenue - spend) / spend) * 100 * 10) / 10 : null;
+      const roi =
+        spend > 0
+          ? Math.round(((revenue - spend) / spend) * 100 * 10) / 10
+          : null;
       const conversionRate =
-        totalLeads > 0 ? Math.round((confirmedLeads.length / totalLeads) * 100 * 10) / 10 : 0;
+        totalLeads > 0
+          ? Math.round((confirmedLeads.length / totalLeads) * 100 * 10) / 10
+          : 0;
 
       return {
         campaign: {
@@ -921,7 +958,12 @@ export async function getConfirmedReport(params: {
 // or manager should chase before they go cold.
 // ═══════════════════════════════════════
 
-const TERMINAL_STATUSES = ["CLIENT", "LOST", "NOT_INTERESTED", "DUPLICATE"] as const;
+const TERMINAL_STATUSES = [
+  "CLIENT",
+  "LOST",
+  "NOT_INTERESTED",
+  "DUPLICATE",
+] as const;
 
 export async function getLeadsAtRisk(params: {
   prisma: PrismaClient;
@@ -1012,7 +1054,8 @@ export async function getRevenueForecast(params: {
   const visitedByStatus = new Map<string, Set<string>>();
   for (const t of transitions) {
     if (!t.statusBefore) continue;
-    if (!visitedByStatus.has(t.statusBefore)) visitedByStatus.set(t.statusBefore, new Set());
+    if (!visitedByStatus.has(t.statusBefore))
+      visitedByStatus.set(t.statusBefore, new Set());
     visitedByStatus.get(t.statusBefore)!.add(t.leadId);
   }
 
@@ -1025,18 +1068,28 @@ export async function getRevenueForecast(params: {
 
   let pipelineValue = 0;
   let weightedForecast = 0;
-  const byStage = new Map<string, { count: number; value: number; probability: number; weighted: number }>();
+  const byStage = new Map<
+    string,
+    { count: number; value: number; probability: number; weighted: number }
+  >();
 
   for (const lead of openLeads) {
     const value = Number(lead.dealSizeEstimate ?? 0);
     const probability =
-      winProbability.get(lead.status) ?? DEFAULT_STAGE_PROBABILITY[lead.status] ?? 0.1;
+      winProbability.get(lead.status) ??
+      DEFAULT_STAGE_PROBABILITY[lead.status] ??
+      0.1;
     const weighted = value * probability;
 
     pipelineValue += value;
     weightedForecast += weighted;
 
-    const bucket = byStage.get(lead.status) ?? { count: 0, value: 0, probability, weighted: 0 };
+    const bucket = byStage.get(lead.status) ?? {
+      count: 0,
+      value: 0,
+      probability,
+      weighted: 0,
+    };
     bucket.count += 1;
     bucket.value += value;
     bucket.weighted += weighted;
@@ -1044,9 +1097,16 @@ export async function getRevenueForecast(params: {
   }
 
   const topOpenDeals = [...openLeads]
-    .sort((a, b) => Number(b.dealSizeEstimate ?? 0) - Number(a.dealSizeEstimate ?? 0))
+    .sort(
+      (a, b) =>
+        Number(b.dealSizeEstimate ?? 0) - Number(a.dealSizeEstimate ?? 0),
+    )
     .slice(0, 10)
-    .map((l) => ({ id: l.id, status: l.status, dealSizeEstimate: Number(l.dealSizeEstimate ?? 0) }));
+    .map((l) => ({
+      id: l.id,
+      status: l.status,
+      dealSizeEstimate: Number(l.dealSizeEstimate ?? 0),
+    }));
 
   return {
     pipelineValue,
@@ -1066,7 +1126,10 @@ export async function getRevenueForecast(params: {
 // company-wide view SubAdmin's own dashboard deliberately excludes.
 // ═══════════════════════════════════════
 
-export async function getBranchComparison(params: { prisma: PrismaClient; period: Period }) {
+export async function getBranchComparison(params: {
+  prisma: PrismaClient;
+  period: Period;
+}) {
   const { prisma } = params;
   const { from, to } = getDateRange(params.period);
 
@@ -1077,38 +1140,61 @@ export async function getBranchComparison(params: { prisma: PrismaClient; period
 
   const rows = await Promise.all(
     branches.map(async (branch) => {
-      const [pipelineValueAgg, totalLeads, openLeads, overdueLeads, headcount] = await Promise.all([
-        prisma.lead.aggregate({
-          where: { branchId: branch.id, status: { notIn: [...TERMINAL_STATUSES] } },
-          _sum: { dealSizeEstimate: true },
-        }),
-        prisma.lead.count({ where: { branchId: branch.id, createdAt: { gte: from, lte: to } } }),
-        prisma.lead.count({
-          where: { branchId: branch.id, status: { notIn: [...TERMINAL_STATUSES] } },
-        }),
-        prisma.lead.count({
-          where: {
-            branchId: branch.id,
-            nextFollowUpAt: { lte: new Date() },
-            status: { notIn: [...TERMINAL_STATUSES] },
-          },
-        }),
-        prisma.user.count({ where: { branchId: branch.id, role: "EMPLOYEE", isActive: true } }),
-      ]);
+      const [pipelineValueAgg, totalLeads, openLeads, overdueLeads, headcount] =
+        await Promise.all([
+          prisma.lead.aggregate({
+            where: {
+              branchId: branch.id,
+              status: { notIn: [...TERMINAL_STATUSES] },
+            },
+            _sum: { dealSizeEstimate: true },
+          }),
+          prisma.lead.count({
+            where: { branchId: branch.id, createdAt: { gte: from, lte: to } },
+          }),
+          prisma.lead.count({
+            where: {
+              branchId: branch.id,
+              status: { notIn: [...TERMINAL_STATUSES] },
+            },
+          }),
+          prisma.lead.count({
+            where: {
+              branchId: branch.id,
+              nextFollowUpAt: { lte: new Date() },
+              status: { notIn: [...TERMINAL_STATUSES] },
+            },
+          }),
+          prisma.user.count({
+            where: { branchId: branch.id, role: "EMPLOYEE", isActive: true },
+          }),
+        ]);
 
       // Revenue actually comes from ClientDeal, not the (unreliable) estimate —
       // reuse the same source getConfirmedReport uses.
       const clientDeals = await prisma.clientDeal.findMany({
-        where: { lead: { branchId: branch.id, status: "CLIENT" }, createdAt: { gte: from, lte: to } },
+        where: {
+          lead: { branchId: branch.id, status: "CLIENT" },
+          createdAt: { gte: from, lte: to },
+        },
         select: { dealValue: true },
       });
-      const revenue = clientDeals.reduce((sum, d) => sum + Number(d.dealValue), 0);
+      const revenue = clientDeals.reduce(
+        (sum, d) => sum + Number(d.dealValue),
+        0,
+      );
 
-      const complianceRate = openLeads > 0 ? Math.round(((openLeads - overdueLeads) / openLeads) * 100) : 100;
+      const complianceRate =
+        openLeads > 0
+          ? Math.round(((openLeads - overdueLeads) / openLeads) * 100)
+          : 100;
       // Composite health score — 40% follow-up compliance, 60% activity level
       // (open leads relative to headcount, capped) until targets exist to
       // measure attainment against.
-      const healthScore = Math.round(complianceRate * 0.4 + Math.min(100, (totalLeads / Math.max(1, headcount)) * 20) * 0.6);
+      const healthScore = Math.round(
+        complianceRate * 0.4 +
+          Math.min(100, (totalLeads / Math.max(1, headcount)) * 20) * 0.6,
+      );
 
       return {
         branch: { id: branch.id, name: branch.name, city: branch.city },
@@ -1119,12 +1205,17 @@ export async function getBranchComparison(params: { prisma: PrismaClient; period
         headcount,
         complianceRate,
         healthScore,
-        estimatedPipelineValue: Number(pipelineValueAgg._sum.dealSizeEstimate ?? 0),
+        estimatedPipelineValue: Number(
+          pipelineValueAgg._sum.dealSizeEstimate ?? 0,
+        ),
       };
     }),
   );
 
-  return { period: { from, to }, branches: rows.sort((a, b) => b.revenue - a.revenue) };
+  return {
+    period: { from, to },
+    branches: rows.sort((a, b) => b.revenue - a.revenue),
+  };
 }
 
 // ═══════════════════════════════════════
@@ -1140,19 +1231,27 @@ export async function getWorkloadBalance(params: {
   const { prisma, branchId } = params;
 
   const employees = await prisma.user.findMany({
-    where: { role: "EMPLOYEE", isActive: true, ...(branchId ? { branchId } : {}) },
+    where: {
+      role: "EMPLOYEE",
+      isActive: true,
+      ...(branchId ? { branchId } : {}),
+    },
     select: {
       id: true,
       name: true,
       _count: {
         select: {
-          assignedLeads: { where: { status: { notIn: [...TERMINAL_STATUSES] } } },
+          assignedLeads: {
+            where: { status: { notIn: [...TERMINAL_STATUSES] } },
+          },
         },
       },
     },
   });
 
-  const counts = employees.map((e) => e._count.assignedLeads).sort((a, b) => a - b);
+  const counts = employees
+    .map((e) => e._count.assignedLeads)
+    .sort((a, b) => a - b);
   const median =
     counts.length === 0
       ? 0
@@ -1166,7 +1265,10 @@ export async function getWorkloadBalance(params: {
       .map((e) => ({
         employee: { id: e.id, name: e.name },
         openLeads: e._count.assignedLeads,
-        vsMedian: median > 0 ? Math.round(((e._count.assignedLeads - median) / median) * 100) : 0,
+        vsMedian:
+          median > 0
+            ? Math.round(((e._count.assignedLeads - median) / median) * 100)
+            : 0,
       }))
       .sort((a, b) => b.openLeads - a.openLeads),
   };
