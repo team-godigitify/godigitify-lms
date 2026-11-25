@@ -366,6 +366,39 @@ export async function sendFollowUpReminderEmail(params: {
   });
 }
 
+export async function sendUpcomingFollowUpAlertEmail(params: {
+  to: string;
+  leadName: string | null;
+  phone: string;
+  status: string;
+  assignedToName: string | null;
+  dueAt: string;
+  leadUrl: string;
+}): Promise<void> {
+  const displayName = params.leadName ?? params.phone;
+  const dueLabel = new Date(params.dueAt).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+  await send({
+    to: params.to,
+    subject: `⏰ Follow-up at ${dueLabel}: ${displayName}`,
+    html: htmlWrapper(`
+      <div class="title">Follow-up Coming Up</div>
+      <div class="body">A follow-up is due shortly.</div>
+      <div class="highlight">
+        <strong>Lead:</strong> ${esc(displayName)}<br>
+        <strong>Phone:</strong> ${esc(params.phone)}<br>
+        <strong>Status:</strong> ${esc(params.status.replace(/_/g, " "))}<br>
+        <strong>Assigned to:</strong> ${esc(params.assignedToName ?? "Unassigned")}<br>
+        <strong>Due at:</strong> ${esc(dueLabel)} IST
+      </div>
+      <a href="${esc(params.leadUrl)}" class="btn" style="background:#FF6A00;color:#111827;text-decoration:none;font-weight:700;">Open Lead</a>
+    `),
+  });
+}
+
 export async function sendMetaLeadFormEmail(params: {
   to: string;
   employeeName: string;

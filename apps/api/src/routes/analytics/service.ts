@@ -962,6 +962,7 @@ const TERMINAL_STATUSES = [
   "CLIENT",
   "LOST",
   "NOT_INTERESTED",
+  "WRONG_NUMBER",
   "DUPLICATE",
 ] as const;
 

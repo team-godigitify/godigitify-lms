@@ -102,6 +102,20 @@ export const config = {
   instagramScraperKey:   optionalEnv("INSTAGRAM_SCRAPER_KEY", ""),
   frontendUrl: optionalEnv("FRONTEND_URL", "http://localhost:3000"),
 
+  // ── Upcoming follow-up alerts ──
+  // Every follow-up (assigned or not) emails these addresses N min before it
+  // is due. Comma-separated. When empty, falls back to the active users whose
+  // name matches FOLLOWUP_ALERT_NAMES (default: Shreya, Aniket).
+  followUpAlertEmails: optionalEnv("FOLLOWUP_ALERT_EMAILS", "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
+  followUpAlertNames: optionalEnv("FOLLOWUP_ALERT_NAMES", "Shreya,Aniket")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
+  followUpAlertLeadMinutes: parseInt(optionalEnv("FOLLOWUP_ALERT_LEAD_MINUTES", "15"), 10),
+
   isProd: process.env["NODE_ENV"] === "production",
   isDev: process.env["NODE_ENV"] !== "production",
 

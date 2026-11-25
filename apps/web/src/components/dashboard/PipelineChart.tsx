@@ -24,6 +24,9 @@ const PIPELINE_ORDER: LeadStatus[] = [
   LeadStatus.LOST,
   LeadStatus.NOT_INTERESTED,
   LeadStatus.NOT_REACHABLE,
+  LeadStatus.SWITCHED_OFF,
+  LeadStatus.BUSY,
+  LeadStatus.WRONG_NUMBER,
   LeadStatus.DUPLICATE,
 ];
 
@@ -40,6 +43,9 @@ const STATUS_HEX: Record<string, string> = {
   "bg-gray-400": "#9ca3af",
   "bg-rose-500": "#f43f5e",
   "bg-slate-400": "#94a3b8",
+  "bg-teal-500": "#14b8a6",
+  "bg-stone-500": "#78716c",
+  "bg-yellow-500": "#eab308",
 };
 
 export function PipelineChart() {

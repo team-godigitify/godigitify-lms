@@ -7,6 +7,7 @@ import {
   sendAccountDeactivatedEmail,
   sendLeadAssignedEmail,
   sendFollowUpReminderEmail,
+  sendUpcomingFollowUpAlertEmail,
   sendMetaLeadFormEmail,
   sendWhatsAppLeadEmail,
   sendLeadCreatedEmail,
@@ -71,6 +72,18 @@ export function startNotificationWorker(connection: Redis): Worker {
             phone: data.phone ?? "",
             leadUrl: `${config.frontendUrl}/leads/${data.leadId}`,
             overdueBy: data.inAppMessage,
+          });
+          break;
+
+        case "upcoming-followup-alert":
+          await sendUpcomingFollowUpAlertEmail({
+            to: data.to,
+            leadName: data.leadName ?? null,
+            phone: data.phone ?? "",
+            status: data.status,
+            assignedToName: data.assignedToName ?? null,
+            dueAt: data.dueAt,
+            leadUrl: `${config.frontendUrl}/leads/${data.leadId}`,
           });
           break;
 

@@ -17,6 +17,9 @@ export enum LeadStatus {
   LOST = "LOST",
   NOT_INTERESTED = "NOT_INTERESTED",
   NOT_REACHABLE = "NOT_REACHABLE",
+  SWITCHED_OFF = "SWITCHED_OFF",
+  BUSY = "BUSY",
+  WRONG_NUMBER = "WRONG_NUMBER",
   DUPLICATE = "DUPLICATE",
 }
 
@@ -64,22 +67,32 @@ export const VALID_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
     LeadStatus.ATTEMPTED_CONTACT,
     LeadStatus.CONNECTED,
     LeadStatus.NOT_REACHABLE,
+    LeadStatus.SWITCHED_OFF,
+    LeadStatus.BUSY,
+    LeadStatus.WRONG_NUMBER,
     LeadStatus.DUPLICATE,
     LeadStatus.LOST,
   ],
   [LeadStatus.SEVEN_DEVS_LEAD]: [
     LeadStatus.ATTEMPTED_CONTACT,
     LeadStatus.CONNECTED,
+    LeadStatus.SWITCHED_OFF,
+    LeadStatus.BUSY,
+    LeadStatus.WRONG_NUMBER,
     LeadStatus.LOST,
   ],
   [LeadStatus.ATTEMPTED_CONTACT]: [
     LeadStatus.CONNECTED,
     LeadStatus.NOT_REACHABLE,
+    LeadStatus.SWITCHED_OFF,
+    LeadStatus.BUSY,
+    LeadStatus.WRONG_NUMBER,
     LeadStatus.NOT_INTERESTED,
     LeadStatus.LOST,
     LeadStatus.FOLLOW_UP_SCHEDULED,
   ],
   [LeadStatus.CONNECTED]: [
+    LeadStatus.ATTEMPTED_CONTACT,
     LeadStatus.INTERESTED,
     LeadStatus.NOT_INTERESTED,
     LeadStatus.FOLLOW_UP_SCHEDULED,
@@ -94,6 +107,8 @@ export const VALID_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
   [LeadStatus.FOLLOW_UP_SCHEDULED]: [
     LeadStatus.CONNECTED,
     LeadStatus.ATTEMPTED_CONTACT,
+    LeadStatus.SWITCHED_OFF,
+    LeadStatus.BUSY,
     LeadStatus.INTERESTED,
     LeadStatus.NEGOTIATING,
     LeadStatus.NOT_INTERESTED,
@@ -121,6 +136,29 @@ export const VALID_TRANSITIONS: Record<LeadStatus, LeadStatus[]> = {
   [LeadStatus.NOT_REACHABLE]: [
     LeadStatus.ATTEMPTED_CONTACT,
     LeadStatus.CONNECTED,
+    LeadStatus.SWITCHED_OFF,
+    LeadStatus.BUSY,
+  ],
+  // Call-outcome statuses — the lead can be retried on the next attempt
+  [LeadStatus.SWITCHED_OFF]: [
+    LeadStatus.ATTEMPTED_CONTACT,
+    LeadStatus.CONNECTED,
+    LeadStatus.BUSY,
+    LeadStatus.NOT_REACHABLE,
+    LeadStatus.FOLLOW_UP_SCHEDULED,
+    LeadStatus.LOST,
+  ],
+  [LeadStatus.BUSY]: [
+    LeadStatus.ATTEMPTED_CONTACT,
+    LeadStatus.CONNECTED,
+    LeadStatus.SWITCHED_OFF,
+    LeadStatus.NOT_REACHABLE,
+    LeadStatus.FOLLOW_UP_SCHEDULED,
+    LeadStatus.LOST,
+  ],
+  [LeadStatus.WRONG_NUMBER]: [
+    LeadStatus.ATTEMPTED_CONTACT, // after the number is corrected
+    LeadStatus.LOST,
   ],
   [LeadStatus.DUPLICATE]: [], // terminal — stays duplicate
 };

@@ -1,6 +1,7 @@
 import { buildServer } from "./server";
 import { config } from "./config";
 import { startFollowUpCron } from "./jobs/followUp";
+import { startUpcomingFollowUpAlertCron } from "./jobs/upcomingFollowUpAlert";
 import { startDailyReportCron } from "./jobs/dailyReport";
 import { startNotificationWorker } from "./workers/notifications";
 import { startIntelBriefWorker } from "./workers/intelBrief";
@@ -15,6 +16,7 @@ async function main() {
   // Start background jobs after server is ready
   fastify.addHook("onReady", async () => {
     startFollowUpCron(fastify);
+    startUpcomingFollowUpAlertCron(fastify);
     startDailyReportCron(fastify);
     notificationWorker = startNotificationWorker(fastify.redis as any);
     // Intel Brief worker only starts when API key is configured

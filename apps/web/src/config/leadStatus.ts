@@ -93,6 +93,27 @@ export const STATUS_CONFIG: Record<LeadStatus, StatusConfig> = {
     border: "border-rose-200",
     dot: "bg-rose-500",
   },
+  [LeadStatus.SWITCHED_OFF]: {
+    label: "Switched Off",
+    color: "text-stone-700",
+    bg: "bg-stone-50",
+    border: "border-stone-200",
+    dot: "bg-stone-500",
+  },
+  [LeadStatus.BUSY]: {
+    label: "Busy",
+    color: "text-yellow-700",
+    bg: "bg-yellow-50",
+    border: "border-yellow-200",
+    dot: "bg-yellow-500",
+  },
+  [LeadStatus.WRONG_NUMBER]: {
+    label: "Wrong Number",
+    color: "text-pink-700",
+    bg: "bg-pink-50",
+    border: "border-pink-200",
+    dot: "bg-pink-500",
+  },
   [LeadStatus.DUPLICATE]: {
     label: "Duplicate",
     color: "text-slate-600",
